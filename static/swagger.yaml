@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: Smart Attendance System API
+  description: REST API for Smart Attendance System with face recognition
+  version: 1.0.0
+  contact:
+    url: https://github.com/KunalPoonia/smart-attendance-system
+  license:
+    name: MIT
+servers:
+  - url: /
+tags:
+  - name: Students
+    description: Student management
+  - name: Attendance
+    description: Attendance tracking
+  - name: Analytics
+    description: Analytics and reports
+  - name: Leave
+    description: Leave management
+  - name: Camera
+    description: Face recognition
+
+paths:
+  /api/student/{id}:
+    get:
+      tags: [Students]
+      summary: Get student by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Student details
+        '404':
+          description: Not found
+
+  /api/attendance_summary:
+    get:
+      tags: [Attendance]
+      summary: Get attendance summary
+      responses:
+        '200':
+          description: Summary data
+
+  /api/today_attendance:
+    get:
+      tags: [Attendance]
+      summary: Get today's attendance
+      responses:
+        '200':
+          description: Today's records
+
+  /api/analytics/trend:
+    get:
+      tags: [Analytics]
+      summary: Get attendance trend
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Trend data
+
+  /api/analytics/department:
+    get:
+      tags: [Analytics]
+      summary: Department statistics
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Department data
+
+  /api/analytics/status_distribution:
+    get:
+      tags: [Analytics]
+      summary: Status distribution
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Distribution data
+
+  /api/analytics/top_students:
+    get:
+      tags: [Analytics]
+      summary: Top performing students
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Top students list
+
+  /api/analytics/at_risk:
+    get:
+      tags: [Analytics]
+      summary: At-risk students
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+        - name: threshold
+          in: query
+          schema:
+            type: number
+            default: 75
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: At-risk students
+
+  /api/analytics/weekly_heatmap:
+    get:
+      tags: [Analytics]
+      summary: Weekly heatmap data
+      parameters:
+        - name: weeks
+          in: query
+          schema:
+            type: integer
+            default: 4
+      responses:
+        '200':
+          description: Heatmap data
+
+  /api/analytics/recent_activity:
+    get:
+      tags: [Analytics]
+      summary: Recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Activity list
+
+  /api/leave/{id}:
+    get:
+      tags: [Leave]
+      summary: Get leave request details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Leave details
+        '404':
+          description: Not found
+
+  /api/students_on_leave:
+    get:
+      tags: [Leave]
+      summary: Students currently on leave
+      responses:
+        '200':
+          description: On leave list
+
+  /api/face_recognition_status:
+    get:
+      tags: [Camera]
+      summary: Face recognition status
+      responses:
+        '200':
+          description: Status info
+
+  /start_detection:
+    post:
+      tags: [Camera]
+      summary: Start camera
+      responses:
+        '200':
+          description: Camera started
+
+  /stop_detection:
+    post:
+      tags: [Camera]
+      summary: Stop camera
+      responses:
+        '200':
+          description: Camera stopped
+
+  /start_face_recognition:
+    post:
+      tags: [Camera]
+      summary: Start face recognition
+      responses:
+        '200':
+          description: Recognition started
+
+  /stop_face_recognition:
+    post:
+      tags: [Camera]
+      summary: Stop face recognition
+      responses:
+        '200':
+          description: Recognition stopped
+
+  /mark_student_present:
+    post:
+      tags: [Attendance]
+      summary: Mark student present
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_id:
+                  type: integer
+                confidence:
+                  type: number
+      responses:
+        '200':
+          description: Marked present
+
+  /auto_mark_attendance:
+    post:
+      tags: [Attendance]
+      summary: Auto-mark detected faces
+      responses:
+        '200':
+          description: Attendance marked
+
+  /update_attendance_status:
+    post:
+      tags: [Attendance]
+      summary: Update attendance status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                record_id:
+                  type: integer
+                status:
+                  type: string
+                  enum: [Present, Absent, Late, Excused]
+      responses:
+        '200':
+          description: Status updated
+
+  /delete_student/{id}:
+    post:
+      tags: [Students]
+      summary: Delete student (soft)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Student deleted
+
+  /delete_attendance/{id}:
+    post:
+      tags: [Attendance]
+      summary: Delete attendance record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Record deleted
+
+components:
+  schemas:
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        is_active:
+          type: boolean

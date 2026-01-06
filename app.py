@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
+from flask_swagger_ui import get_swaggerui_blueprint
 import os
 import json
 import base64
@@ -49,6 +50,20 @@ app.config.from_object(Config)
 
 # Initialize database
 db.init_app(app)
+
+# Swagger UI Configuration
+SWAGGER_URL = '/api/docs'
+API_URL = '/static/swagger.yaml'
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "Smart Attendance System API",
+        'layout': "BaseLayout",
+        'deepLinking': True
+    }
+)
+app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 # Initialize components
 simple_camera = SimpleCamera(camera_index=0)
