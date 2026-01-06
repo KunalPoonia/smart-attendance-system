@@ -96,21 +96,27 @@ def index():
             AttendanceRecord.created_at.desc()
         ).limit(10).all()
         
-        return render_template('index.html', 
+        # Use modern template
+        return render_template('index_modern.html', 
                              total_students=total_students,
                              today_attendance=today_attendance,
-                             recent_records=recent_records)
+                             recent_records=recent_records,
+                             datetime=datetime)
     except Exception as e:
         logger.error(f"Error in index route: {str(e)}")
         flash('Error loading dashboard', 'error')
-        return render_template('index.html')
+        return render_template('index_modern.html', 
+                             total_students=0,
+                             today_attendance=0,
+                             recent_records=[],
+                             datetime=datetime)
 
 @app.route('/students')
 def students():
     """Student management page"""
     try:
         students = Student.query.filter_by(is_active=True).all()
-        return render_template('students.html', students=students)
+        return render_template('students_modern.html', students=students)
     except Exception as e:
         logger.error(f"Error in students route: {str(e)}")
         flash('Error loading students', 'error')

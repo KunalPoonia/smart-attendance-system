@@ -1,0 +1,176 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Dashboard - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back! Here's what's happening today.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary">
+            <i class="fas fa-camera"></i>
+            Mark Attendance
+        </a>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card slide-up">
+        <div class="stat-card-header">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_students }}</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    
+    <div class="stat-card slide-up" style="animation-delay: 0.1s">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-user-check"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ today_attendance }}</div>
+        <div class="stat-label">Present Today</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            {% if total_students > 0 %}{{ ((today_attendance / total_students) * 100)|round(1) }}%{% else %}0%{% endif %} attendance rate
+        </div>
+    </div>
+    
+    <div class="stat-card slide-up" style="animation-delay: 0.2s">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ total_students - today_attendance }}</div>
+        <div class="stat-label">Absent Today</div>
+    </div>
+    
+    <div class="stat-card slide-up" style="animation-delay: 0.3s">
+        <div class="stat-card-header">
+            <div class="stat-icon info">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ datetime.now().strftime('%d') }}</div>
+        <div class="stat-label">{{ datetime.now().strftime('%B %Y') }}</div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid-2">
+    <!-- Recent Attendance -->
+    <div class="card slide-up" style="animation-delay: 0.4s">
+        <div class="card-header">
+            <h3 class="card-title">Recent Attendance</h3>
+            <a href="{{ url_for('attendance') }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body">
+            {% if recent_records %}
+            <ul class="activity-list">
+                {% for record in recent_records[:5] %}
+                <li class="activity-item">
+                    <div class="activity-icon stat-icon success">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">{{ record.student.name }}</div>
+                        <div class="activity-meta">
+                            {{ record.student.student_id }} • {{ record.time_in.strftime('%H:%M') if record.time_in else 'N/A' }}
+                        </div>
+                    </div>
+                    <span class="badge badge-success">{{ record.status }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="empty-state-title">No attendance records</div>
+                <div class="empty-state-text">Start marking attendance to see records here.</div>
+                <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary">
+                    <i class="fas fa-camera"></i>
+                    Mark Attendance
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card slide-up" style="animation-delay: 0.5s">
+        <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; gap: 12px;">
+                <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary" style="justify-content: flex-start;">
+                    <i class="fas fa-camera"></i>
+                    Start Face Recognition
+                </a>
+                <a href="{{ url_for('register_student') }}" class="btn btn-secondary" style="justify-content: flex-start;">
+                    <i class="fas fa-user-plus"></i>
+                    Register New Student
+                </a>
+                <a href="{{ url_for('attendance') }}" class="btn btn-secondary" style="justify-content: flex-start;">
+                    <i class="fas fa-clipboard-list"></i>
+                    View Attendance Records
+                </a>
+                <a href="{{ url_for('leave_management') }}" class="btn btn-secondary" style="justify-content: flex-start;">
+                    <i class="fas fa-calendar-minus"></i>
+                    Manage Leave Requests
+                </a>
+                <a href="{{ url_for('reports') }}" class="btn btn-secondary" style="justify-content: flex-start;">
+                    <i class="fas fa-chart-bar"></i>
+                    Generate Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Summary -->
+<div class="card slide-up" style="animation-delay: 0.6s; margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">Today's Attendance Overview</h3>
+        <span class="badge badge-primary">{{ datetime.now().strftime('%A, %B %d, %Y') }}</span>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 14px; color: var(--text-secondary);">Attendance Progress</span>
+                    <span style="font-size: 14px; font-weight: 600;">
+                        {% if total_students > 0 %}{{ ((today_attendance / total_students) * 100)|round(1) }}%{% else %}0%{% endif %}
+                    </span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar success" style="width: {% if total_students > 0 %}{{ (today_attendance / total_students) * 100 }}%{% else %}0%{% endif %}"></div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 32px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--success);">{{ today_attendance }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Present</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--danger);">{{ total_students - today_attendance }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Absent</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--primary);">{{ total_students }}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

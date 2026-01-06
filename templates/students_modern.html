@@ -1,0 +1,151 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Students - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h1 class="page-title">Students</h1>
+        <p class="page-subtitle">Manage all registered students</p>
+    </div>
+    <div class="header-actions">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" class="form-control" placeholder="Search students..." id="searchInput" onkeyup="filterStudents()">
+        </div>
+        <a href="{{ url_for('register_student') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Add Student
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon primary"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="stat-value">{{ students|length }}</div>
+        <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success"><i class="fas fa-user-check"></i></div>
+        </div>
+        <div class="stat-value">{{ students|selectattr('is_active')|list|length }}</div>
+        <div class="stat-label">Active Students</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon info"><i class="fas fa-building"></i></div>
+        </div>
+        <div class="stat-value">{{ students|map(attribute='department')|unique|list|length }}</div>
+        <div class="stat-label">Departments</div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Students</h3>
+        <span class="badge badge-secondary">{{ students|length }} total</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if students %}
+        <div class="table-container">
+            <table class="data-table" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>ID</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if student.image_path %}
+                                <img src="{{ url_for('static', filename=student.image_path.replace('static/', '')) }}" class="avatar" alt="{{ student.name }}">
+                                {% else %}
+                                <div class="avatar avatar-initials">{{ student.name[0] }}</div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: 500;">{{ student.name }}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">{{ student.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code style="background: var(--bg-input); padding: 4px 8px; border-radius: 4px;">{{ student.student_id }}</code></td>
+                        <td>{{ student.department or 'N/A' }}</td>
+                        <td>{{ student.year or 'N/A' }}</td>
+                        <td>{{ student.phone or 'N/A' }}</td>
+                        <td>
+                            {% if student.is_active %}
+                            <span class="badge badge-success">Active</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" onclick="viewStudent({{ student.id }})" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteStudent({{ student.id }}, '{{ student.name }}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-users"></i></div>
+            <div class="empty-state-title">No students registered</div>
+            <div class="empty-state-text">Get started by adding your first student.</div>
+            <a href="{{ url_for('register_student') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Student
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterStudents() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#studentsTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(input) ? '' : 'none';
+    });
+}
+
+function deleteStudent(id, name) {
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+        fetch(`/delete_student/${id}`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert(data.message);
+            });
+    }
+}
+
+function viewStudent(id) {
+    window.location.href = `/api/student/${id}`;
+}
+</script>
+{% endblock %}
