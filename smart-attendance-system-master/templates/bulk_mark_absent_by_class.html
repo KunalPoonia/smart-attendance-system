@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Mark Absent by Class - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-users-slash me-2"></i>Bulk Mark Absent by Class
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('mark_absent') }}" class="btn btn-info">
+                    <i class="fas fa-user-times me-1"></i>Individual Marking
+                </a>
+                <a href="{{ url_for('attendance') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-graduation-cap me-2"></i>Select Class Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>How it works:</strong> This will mark all students in the selected class who haven't been marked present or late as absent.
+                </div>
+                
+                <form method="POST">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">Date *</label>
+                            <input type="date" class="form-control" id="date" name="date" 
+                                   value="{{ date.today().isoformat() }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" name="subject" 
+                                   placeholder="e.g., Mathematics">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department *</label>
+                            <select class="form-select" id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept }}">{{ dept }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="course" class="form-label">Course *</label>
+                            <select class="form-select" id="course" name="course" required>
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                    <option value="{{ course }}">{{ course }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="year" class="form-label">Year *</label>
+                            <select class="form-select" id="year" name="year" required>
+                                <option value="">Select Year</option>
+                                {% for year in years %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="section" class="form-label">Section *</label>
+                            <select class="form-select" id="section" name="section" required>
+                                <option value="">Select Section</option>
+                                {% for section in sections %}
+                                    <option value="{{ section }}">{{ section }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="class_period" class="form-label">Class Period</label>
+                            <select class="form-select" id="class_period" name="class_period">
+                                <option value="">Select Period</option>
+                                <option value="1st Period">1st Period</option>
+                                <option value="2nd Period">2nd Period</option>
+                                <option value="3rd Period">3rd Period</option>
+                                <option value="4th Period">4th Period</option>
+                                <option value="5th Period">5th Period</option>
+                                <option value="6th Period">6th Period</option>
+                                <option value="7th Period">7th Period</option>
+                                <option value="8th Period">8th Period</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label for="teacher_name" class="form-label">Teacher Name</label>
+                            <input type="text" class="form-control" id="teacher_name" name="teacher_name" 
+                                   placeholder="Teacher's name">
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will mark multiple students as absent. Make sure you have already marked all present students for the selected class and date.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('attendance') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning" 
+                                onclick="return confirm('Are you sure you want to mark absent students for the selected class?')">
+                            <i class="fas fa-users-slash me-1"></i>Mark Class Absent
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Preview Section -->
+        <div class="card mt-4" id="previewCard" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-eye me-2"></i>Class Preview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="classPreview">
+                    <!-- Preview content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    if (!$('#date').val()) {
+        $('#date').val(today);
+    }
+    
+    // Preview class when filters change
+    $('#department, #course, #year, #section').change(function() {
+        previewClass();
+    });
+});
+
+function previewClass() {
+    const department = $('#department').val();
+    const course = $('#course').val();
+    const year = $('#year').val();
+    const section = $('#section').val();
+    
+    if (department && course && year && section) {
+        // In a real application, you would make an AJAX call to get student count
+        const classInfo = `${department} - ${course} - Year ${year} - Section ${section}`;
+        
+        $('#classPreview').html(`
+            <div class="text-center">
+                <i class="fas fa-graduation-cap fa-2x text-primary mb-3"></i>
+                <h5>${classInfo}</h5>
+                <p class="text-muted">Students in this class will be marked absent if not already present/late</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Click "Mark Class Absent" to proceed with bulk marking
+                </div>
+            </div>
+        `);
+        
+        $('#previewCard').show();
+    } else {
+        $('#previewCard').hide();
+    }
+}
+</script>
+{% endblock %}

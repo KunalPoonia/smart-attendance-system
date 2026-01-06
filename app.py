@@ -19,7 +19,7 @@ except ImportError as e:
 
 # Import custom modules
 from config import Config
-from database.models import db, Student, AttendanceRecord, AttendanceSession
+from database.models import db, Student, AttendanceRecord, AttendanceSession, LeaveRequest
 from simple_camera import SimpleCamera
 
 # Try to import face recognition modules (graceful fallback if not available)
@@ -638,6 +638,219 @@ def export_attendance():
         logger.error(f"Error exporting attendance: {str(e)}")
         flash('Error exporting attendance', 'error')
         return redirect(url_for('attendance'))
+
+# ==================== LEAVE MANAGEMENT ROUTES ====================
+
+@app.route('/leave')
+def leave_management():
+    """Leave management page"""
+    try:
+        # Get filter parameters
+        status_filter = request.args.get('status', '')
+        type_filter = request.args.get('leave_type', '')
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+        
+        # Build query
+        query = LeaveRequest.query
+        
+        if status_filter:
+            query = query.filter(LeaveRequest.status == status_filter)
+        if type_filter:
+            query = query.filter(LeaveRequest.leave_type == type_filter)
+        if date_from:
+            query = query.filter(LeaveRequest.start_date >= date_from)
+        if date_to:
+            query = query.filter(LeaveRequest.end_date <= date_to)
+        
+        leave_requests = query.order_by(LeaveRequest.created_at.desc()).all()
+        
+        # Get counts
+        today = date.today()
+        pending_count = LeaveRequest.query.filter_by(status='Pending').count()
+        approved_count = LeaveRequest.query.filter_by(status='Approved').count()
+        rejected_count = LeaveRequest.query.filter_by(status='Rejected').count()
+        
+        # Count students on leave today
+        on_leave_today = LeaveRequest.query.filter(
+            LeaveRequest.status == 'Approved',
+            LeaveRequest.start_date <= today,
+            LeaveRequest.end_date >= today
+        ).count()
+        
+        # Get all active students for the apply form
+        students = Student.query.filter_by(is_active=True).order_by(Student.name).all()
+        
+        logger.info(f"Leave management loaded: {len(leave_requests)} requests, {len(students)} students")
+        
+        return render_template('leave_management.html',
+                             leave_requests=leave_requests,
+                             students=students,
+                             pending_count=pending_count,
+                             approved_count=approved_count,
+                             rejected_count=rejected_count,
+                             on_leave_today=on_leave_today,
+                             current_status=status_filter,
+                             current_type=type_filter,
+                             date_from=date_from,
+                             date_to=date_to)
+    except Exception as e:
+        import traceback
+        logger.error(f"Error in leave management: {str(e)}")
+        logger.error(traceback.format_exc())
+        flash('Error loading leave management', 'error')
+        return render_template('leave_management.html', 
+                             leave_requests=[], 
+                             students=[],
+                             pending_count=0, 
+                             approved_count=0, 
+                             rejected_count=0, 
+                             on_leave_today=0,
+                             current_status='',
+                             current_type='',
+                             date_from='',
+                             date_to='')
+
+@app.route('/apply_leave', methods=['POST'])
+def apply_leave():
+    """Apply for leave"""
+    try:
+        student_id = request.form.get('student_id')
+        leave_type = request.form.get('leave_type')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        reason = request.form.get('reason')
+        
+        # Validation
+        if not all([student_id, leave_type, start_date, end_date, reason]):
+            flash('All fields are required', 'error')
+            return redirect(url_for('leave_management'))
+        
+        # Parse dates
+        start = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        if end < start:
+            flash('End date cannot be before start date', 'error')
+            return redirect(url_for('leave_management'))
+        
+        # Check for overlapping leave requests
+        existing = LeaveRequest.query.filter(
+            LeaveRequest.student_id == student_id,
+            LeaveRequest.status != 'Rejected',
+            LeaveRequest.start_date <= end,
+            LeaveRequest.end_date >= start
+        ).first()
+        
+        if existing:
+            flash('A leave request already exists for this period', 'warning')
+            return redirect(url_for('leave_management'))
+        
+        # Create leave request
+        leave_request = LeaveRequest(
+            student_id=student_id,
+            leave_type=leave_type,
+            start_date=start,
+            end_date=end,
+            reason=reason
+        )
+        
+        db.session.add(leave_request)
+        db.session.commit()
+        
+        student = Student.query.get(student_id)
+        logger.info(f"Leave request created for {student.name}: {start_date} to {end_date}")
+        flash('Leave request submitted successfully!', 'success')
+        
+    except Exception as e:
+        logger.error(f"Error applying for leave: {str(e)}")
+        flash('Error submitting leave request', 'error')
+    
+    return redirect(url_for('leave_management'))
+
+@app.route('/review_leave', methods=['POST'])
+def review_leave():
+    """Review (approve/reject) a leave request"""
+    try:
+        leave_id = request.form.get('leave_id')
+        status = request.form.get('status')
+        reviewed_by = request.form.get('reviewed_by')
+        review_notes = request.form.get('review_notes', '')
+        
+        leave_request = LeaveRequest.query.get_or_404(leave_id)
+        
+        leave_request.status = status
+        leave_request.reviewed_by = reviewed_by
+        leave_request.reviewed_at = datetime.utcnow()
+        leave_request.review_notes = review_notes
+        
+        # If approved, auto-mark attendance as "On Leave" for the leave period
+        if status == 'Approved':
+            current_date = leave_request.start_date
+            while current_date <= leave_request.end_date:
+                # Check if attendance record exists for this date
+                existing_record = AttendanceRecord.query.filter_by(
+                    student_id=leave_request.student_id,
+                    date=current_date
+                ).first()
+                
+                if existing_record:
+                    # Update existing record to "On Leave"
+                    existing_record.status = 'On Leave'
+                else:
+                    # Create new record with "On Leave" status
+                    attendance_record = AttendanceRecord(
+                        student_id=leave_request.student_id,
+                        date=current_date,
+                        time_in=datetime.combine(current_date, datetime.min.time()),
+                        status='On Leave',
+                        confidence_score=1.0
+                    )
+                    db.session.add(attendance_record)
+                
+                current_date += timedelta(days=1)
+        
+        db.session.commit()
+        
+        logger.info(f"Leave request {leave_id} {status.lower()} by {reviewed_by}")
+        flash(f'Leave request {status.lower()} successfully!', 'success')
+        
+    except Exception as e:
+        logger.error(f"Error reviewing leave: {str(e)}")
+        flash('Error reviewing leave request', 'error')
+    
+    return redirect(url_for('leave_management'))
+
+@app.route('/api/leave/<int:leave_id>')
+def get_leave_details(leave_id):
+    """Get leave request details API"""
+    try:
+        leave = LeaveRequest.query.get_or_404(leave_id)
+        return jsonify(leave.to_dict())
+    except Exception as e:
+        logger.error(f"Error getting leave details: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/students_on_leave')
+def students_on_leave_api():
+    """Get students currently on approved leave"""
+    try:
+        today = date.today()
+        on_leave = LeaveRequest.query.filter(
+            LeaveRequest.status == 'Approved',
+            LeaveRequest.start_date <= today,
+            LeaveRequest.end_date >= today
+        ).all()
+        
+        return jsonify({
+            'count': len(on_leave),
+            'students': [leave.to_dict() for leave in on_leave]
+        })
+    except Exception as e:
+        logger.error(f"Error getting students on leave: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== END LEAVE MANAGEMENT ROUTES ====================
 
 @app.route('/reports')
 def reports():

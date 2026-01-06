@@ -1,9 +1,34 @@
 import os
+import secrets
 from datetime import timedelta
+
+
+def get_secret_key():
+    """
+    Get secret key from environment or generate a secure one.
+    In production, SECRET_KEY environment variable MUST be set.
+    """
+    secret_key = os.environ.get('SECRET_KEY')
+    
+    if secret_key:
+        return secret_key
+    
+    # Check if running in production
+    flask_env = os.environ.get('FLASK_ENV', 'development')
+    if flask_env == 'production':
+        raise ValueError(
+            "SECRET_KEY environment variable must be set in production! "
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    
+    # Development: generate a random key (will change on restart)
+    print("⚠️  WARNING: Using auto-generated SECRET_KEY. Set SECRET_KEY env var for persistence.")
+    return secrets.token_hex(32)
+
 
 class Config:
     # Flask Configuration
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-here'
+    SECRET_KEY = get_secret_key()
     
     # Database Configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///attendance.db'

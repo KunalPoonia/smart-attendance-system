@@ -1,0 +1,91 @@
+/* Custom CSS for Smart Attendance System */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.btn {
+    border-radius: 5px;
+}
+
+.table {
+    background-color: white;
+}
+
+.alert {
+    border-radius: 5px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px 0;
+}
+
+.camera-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#video-feed {
+    max-width: 100%;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+}
+
+.face-detection-info {
+    background-color: #e9ecef;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.detected-face {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+.unknown-face {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+.status-present {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.status-absent {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.status-late {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.footer {
+    background-color: #343a40;
+    color: white;
+    padding: 20px 0;
+    margin-top: 50px;
+}
