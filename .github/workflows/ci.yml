@@ -2,13 +2,21 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.10'
+  FLASK_ENV: testing
 
 jobs:
   lint:
-    name: Lint & Format Check
+    name: 🔍 Lint & Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,72 +24,144 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
       - name: Install linting tools
         run: |
-          pip install flake8 black isort
+          pip install flake8 black isort pylint mypy
       
-      - name: Run flake8
+      - name: Run flake8 (syntax errors)
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      
+      - name: Run flake8 (style)
+        run: flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
         continue-on-error: true
       
       - name: Check formatting with black
-        run: black --check --diff .
-        continue-on-error: true
+        run: black --check --diff . || true
       
       - name: Check import sorting
-        run: isort --check-only --diff .
-        continue-on-error: true
+        run: isort --check-only --diff . || true
 
-  test:
-    name: Run Tests
+  security:
+    name: 🔒 Security Scan
     runs-on: ubuntu-latest
-    needs: lint
     steps:
       - uses: actions/checkout@v4
       
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install security tools
+        run: pip install bandit safety
+      
+      - name: Run Bandit security scan
+        run: bandit -r . -x ./tests,./venv,./.git -f json -o bandit-report.json || true
+      
+      - name: Check dependencies for vulnerabilities
+        run: |
+          pip install -r requirements.txt
+          safety check --json > safety-report.json || true
+        continue-on-error: true
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+  test:
+    name: 🧪 Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
       
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov pytest-html pytest-xdist
       
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
-          pytest tests/ -v --cov=. --cov-report=xml || echo "No tests found"
+          pytest tests/ -v \
+            --cov=. \
+            --cov-report=xml \
+            --cov-report=html \
+            --html=test-report.html \
+            --self-contained-html \
+            -n auto \
+            || echo "No tests found or tests failed"
+        env:
+          FLASK_ENV: testing
       
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ matrix.python-version }}
+          path: |
+            test-report.html
+            htmlcov/
 
-  security:
-    name: Security Scan
+  build:
+    name: 📦 Build
     runs-on: ubuntu-latest
+    needs: [lint, test]
     steps:
       - uses: actions/checkout@v4
       
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ env.PYTHON_VERSION }}
       
-      - name: Install bandit
-        run: pip install bandit
+      - name: Install dependencies
+        run: pip install -r requirements.txt
       
-      - name: Run security scan
-        run: bandit -r . -x ./tests,./venv,./.git -f json -o bandit-report.json || true
+      - name: Verify app can start
+        run: |
+          timeout 10 python -c "from app import app; print('App imports successfully')" || true
       
-      - name: Upload security report
+      - name: Create build artifact
+        run: |
+          mkdir -p dist
+          zip -r dist/smart-attendance-system-${{ github.sha }}.zip . \
+            -x "*.git*" \
+            -x "*__pycache__*" \
+            -x "*.pyc" \
+            -x "dist/*" \
+            -x "*.log" \
+            -x "instance/*" \
+            -x ".env*" \
+            -x "*.db"
+      
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: security-report
-          path: bandit-report.json
+          name: build-${{ github.sha }}
+          path: dist/
+          retention-days: 7

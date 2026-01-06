@@ -2,15 +2,16 @@ name: Automated Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  code-review:
-    name: Code Review Checks
+  code-quality:
+    name: 📊 Code Quality Analysis
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,39 +22,63 @@ jobs:
         with:
           python-version: '3.10'
       
-      - name: Install review tools
+      - name: Install analysis tools
         run: |
-          pip install flake8 pylint radon
+          pip install flake8 pylint radon lizard
       
-      - name: Get changed files
+      - name: Get changed Python files
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
           files: |
             **/*.py
       
-      - name: Run pylint on changed files
+      - name: Run code analysis
         if: steps.changed-files.outputs.any_changed == 'true'
+        id: analysis
         run: |
-          echo "## Pylint Report" > review-report.md
-          echo "" >> review-report.md
+          echo "## 📊 Code Quality Report" > report.md
+          echo "" >> report.md
+          echo "### Changed Files" >> report.md
+          echo "\`\`\`" >> report.md
+          echo "${{ steps.changed-files.outputs.all_changed_files }}" >> report.md
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          # Flake8 analysis
+          echo "### 🔍 Flake8 (Style & Errors)" >> report.md
+          echo "\`\`\`" >> report.md
+          flake8 ${{ steps.changed-files.outputs.all_changed_files }} --max-line-length=120 --statistics 2>&1 >> report.md || true
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          # Complexity analysis
+          echo "### 🧮 Cyclomatic Complexity (radon)" >> report.md
+          echo "\`\`\`" >> report.md
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "### $file" >> review-report.md
-            pylint "$file" --output-format=text --score=yes 2>/dev/null >> review-report.md || true
-            echo "" >> review-report.md
+            echo "File: $file" >> report.md
+            radon cc "$file" -a -s 2>&1 >> report.md || true
+            echo "" >> report.md
           done
-        continue-on-error: true
-      
-      - name: Check code complexity
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          echo "## Complexity Report" >> review-report.md
-          echo "" >> review-report.md
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "### $file" >> review-report.md
-            radon cc "$file" -a -s 2>/dev/null >> review-report.md || true
-            echo "" >> review-report.md
-          done
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          # Maintainability index
+          echo "### 📈 Maintainability Index" >> report.md
+          echo "\`\`\`" >> report.md
+          radon mi ${{ steps.changed-files.outputs.all_changed_files }} -s 2>&1 >> report.md || true
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          # Code metrics
+          echo "### 📏 Code Metrics (lizard)" >> report.md
+          echo "\`\`\`" >> report.md
+          lizard ${{ steps.changed-files.outputs.all_changed_files }} -l python 2>&1 | head -50 >> report.md || true
+          echo "\`\`\`" >> report.md
+          
+          echo "" >> report.md
+          echo "---" >> report.md
+          echo "*Automated code review by GitHub Actions*" >> report.md
         continue-on-error: true
       
       - name: Post review comment
@@ -62,12 +87,12 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            let report = 'No Python files changed.';
             
-            let report = '';
             try {
-              report = fs.readFileSync('review-report.md', 'utf8');
+              report = fs.readFileSync('report.md', 'utf8');
             } catch (e) {
-              report = 'No Python files changed or review completed successfully.';
+              console.log('No report generated');
             }
             
             // Truncate if too long
@@ -75,38 +100,37 @@ jobs:
               report = report.substring(0, 60000) + '\n\n... (truncated)';
             }
             
-            const body = `## 🤖 Automated Code Review\n\n${report}\n\n---\n*This is an automated review. Please address any issues before merging.*`;
-            
-            // Find existing comment
+            // Find existing bot comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number
             });
             
-            const botComment = comments.find(c => c.body.includes('🤖 Automated Code Review'));
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('📊 Code Quality Report')
+            );
             
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: botComment.id,
-                body: body
+                body: report
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
-                body: body
+                body: report
               });
             }
 
   pr-checklist:
-    name: PR Checklist
+    name: ✅ PR Checklist
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
+    if: github.event.action == 'opened'
     steps:
       - name: Add PR checklist
         uses: actions/github-script@v7
@@ -114,26 +138,40 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             
-            // Only add checklist on new PRs
-            if (context.payload.action !== 'opened') return;
+            const checklist = `## ✅ PR Checklist
             
-            const checklist = `## PR Checklist
+            Please review and check off the following:
             
-            Please ensure the following before requesting review:
-            
+            ### Code Quality
             - [ ] Code follows project style guidelines
             - [ ] Self-review completed
-            - [ ] Comments added for complex logic
-            - [ ] Tests added/updated (if applicable)
-            - [ ] Documentation updated (if applicable)
+            - [ ] No unnecessary console.log/print statements
+            - [ ] No hardcoded values or secrets
+            
+            ### Testing
+            - [ ] Tests added/updated for new functionality
+            - [ ] All existing tests pass
+            - [ ] Manual testing completed
+            
+            ### Documentation
+            - [ ] Code comments added for complex logic
+            - [ ] README updated (if applicable)
+            - [ ] API documentation updated (if applicable)
+            
+            ### Security
             - [ ] No sensitive data exposed
-            - [ ] Database migrations included (if schema changed)
+            - [ ] Input validation implemented
+            - [ ] SQL injection prevention verified
             
             ---
-            **PR Stats:**
-            - Files changed: ${pr.changed_files}
-            - Additions: +${pr.additions}
-            - Deletions: -${pr.deletions}
+            
+            **📊 PR Stats:**
+            | Metric | Value |
+            |--------|-------|
+            | Files Changed | ${pr.changed_files} |
+            | Additions | +${pr.additions} |
+            | Deletions | -${pr.deletions} |
+            | Total Changes | ${pr.additions + pr.deletions} |
             `;
             
             await github.rest.issues.createComment({

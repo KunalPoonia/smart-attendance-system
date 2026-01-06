@@ -1,136 +1,138 @@
-name: Auto Label Issues & PRs
+name: Auto Label
 
 on:
   issues:
     types: [opened, edited]
   pull_request:
     types: [opened, edited, synchronize]
+  pull_request_target:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   label-issues:
-    name: Label Issues
+    name: 🏷️ Label Issues
     runs-on: ubuntu-latest
     if: github.event_name == 'issues'
-    permissions:
-      issues: write
     steps:
-      - name: Label based on title/body
+      - name: Auto-label based on content
         uses: actions/github-script@v7
         with:
           script: |
             const issue = context.payload.issue;
-            const title = issue.title.toLowerCase();
+            const title = (issue.title || '').toLowerCase();
             const body = (issue.body || '').toLowerCase();
             const content = title + ' ' + body;
             
-            const labels = [];
+            const labelRules = [
+              // Type labels
+              { keywords: ['bug', 'error', 'fix', 'broken', 'crash', 'fail', 'issue', 'problem'], label: 'bug' },
+              { keywords: ['feature', 'enhancement', 'add', 'new', 'request', 'implement'], label: 'enhancement' },
+              { keywords: ['doc', 'readme', 'documentation', 'guide', 'tutorial'], label: 'documentation' },
+              { keywords: ['question', 'help', 'how to', 'support'], label: 'question' },
+              
+              // Component labels
+              { keywords: ['ui', 'frontend', 'css', 'template', 'design', 'layout', 'style'], label: 'ui' },
+              { keywords: ['face', 'recognition', 'detection', 'camera', 'opencv', 'dlib'], label: 'face-recognition' },
+              { keywords: ['database', 'db', 'sql', 'model', 'migration', 'sqlite'], label: 'database' },
+              { keywords: ['api', 'endpoint', 'route', 'rest', 'json'], label: 'api' },
+              { keywords: ['auth', 'login', 'security', 'password', 'token'], label: 'security' },
+              { keywords: ['test', 'testing', 'pytest', 'unittest'], label: 'testing' },
+              { keywords: ['deploy', 'docker', 'ci', 'cd', 'pipeline', 'github action'], label: 'devops' },
+              
+              // Priority labels
+              { keywords: ['urgent', 'critical', 'asap', 'important', 'blocker'], label: 'priority: critical' },
+              { keywords: ['performance', 'slow', 'optimize', 'speed'], label: 'performance' },
+            ];
             
-            // Bug detection
-            if (content.includes('bug') || content.includes('error') || content.includes('fix') || content.includes('broken') || content.includes('crash')) {
-              labels.push('bug');
+            const labelsToAdd = new Set();
+            
+            for (const rule of labelRules) {
+              if (rule.keywords.some(kw => content.includes(kw))) {
+                labelsToAdd.add(rule.label);
+              }
             }
             
-            // Feature request
-            if (content.includes('feature') || content.includes('enhancement') || content.includes('add') || content.includes('new')) {
-              labels.push('enhancement');
-            }
-            
-            // Documentation
-            if (content.includes('doc') || content.includes('readme') || content.includes('documentation')) {
-              labels.push('documentation');
-            }
-            
-            // UI related
-            if (content.includes('ui') || content.includes('frontend') || content.includes('css') || content.includes('template') || content.includes('design')) {
-              labels.push('ui');
-            }
-            
-            // Face recognition
-            if (content.includes('face') || content.includes('recognition') || content.includes('detection') || content.includes('camera')) {
-              labels.push('face-recognition');
-            }
-            
-            // Database
-            if (content.includes('database') || content.includes('db') || content.includes('sql') || content.includes('model')) {
-              labels.push('database');
-            }
-            
-            // API
-            if (content.includes('api') || content.includes('endpoint') || content.includes('route')) {
-              labels.push('api');
-            }
-            
-            // Priority detection
-            if (content.includes('urgent') || content.includes('critical') || content.includes('asap')) {
-              labels.push('priority: high');
-            }
-            
-            // Security
-            if (content.includes('security') || content.includes('vulnerability') || content.includes('auth')) {
-              labels.push('security');
-            }
-            
-            if (labels.length > 0) {
+            if (labelsToAdd.size > 0) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                labels: labels
+                labels: Array.from(labelsToAdd)
               });
+              console.log(`Added labels: ${Array.from(labelsToAdd).join(', ')}`);
             }
 
   label-pr:
-    name: Label Pull Requests
+    name: 🏷️ Label PRs
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    permissions:
-      pull-requests: write
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Label PR by files changed
+      - name: Label by files changed
         uses: actions/github-script@v7
         with:
           script: |
+            const pr = context.payload.pull_request;
+            
             const { data: files } = await github.rest.pulls.listFiles({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
+              pull_number: pr.number
             });
             
             const labels = new Set();
             
+            const fileRules = [
+              { pattern: /\.py$/, label: 'python' },
+              { pattern: /test.*\.py$/, label: 'tests' },
+              { pattern: /\.html$/, label: 'frontend' },
+              { pattern: /\.css$/, label: 'frontend' },
+              { pattern: /\.js$/, label: 'frontend' },
+              { pattern: /template/, label: 'ui' },
+              { pattern: /face_recognition/, label: 'face-recognition' },
+              { pattern: /database|model/, label: 'database' },
+              { pattern: /\.github/, label: 'ci/cd' },
+              { pattern: /\.md$/, label: 'documentation' },
+              { pattern: /config|\.env|requirements/, label: 'configuration' },
+              { pattern: /static\/css/, label: 'styling' },
+              { pattern: /static\/js/, label: 'javascript' },
+            ];
+            
             for (const file of files) {
-              const filename = file.filename.toLowerCase();
-              
-              if (filename.includes('test')) labels.add('tests');
-              if (filename.endsWith('.py')) labels.add('python');
-              if (filename.endsWith('.html')) labels.add('frontend');
-              if (filename.endsWith('.css') || filename.endsWith('.js')) labels.add('frontend');
-              if (filename.includes('template')) labels.add('ui');
-              if (filename.includes('face_recognition')) labels.add('face-recognition');
-              if (filename.includes('database') || filename.includes('model')) labels.add('database');
-              if (filename.includes('.github')) labels.add('ci/cd');
-              if (filename.includes('readme') || filename.endsWith('.md')) labels.add('documentation');
-              if (filename.includes('config')) labels.add('configuration');
+              for (const rule of fileRules) {
+                if (rule.pattern.test(file.filename)) {
+                  labels.add(rule.label);
+                }
+              }
             }
             
             // Size labels
-            const additions = context.payload.pull_request.additions;
-            const deletions = context.payload.pull_request.deletions;
-            const totalChanges = additions + deletions;
-            
-            if (totalChanges < 10) labels.add('size: XS');
-            else if (totalChanges < 50) labels.add('size: S');
-            else if (totalChanges < 200) labels.add('size: M');
-            else if (totalChanges < 500) labels.add('size: L');
+            const changes = pr.additions + pr.deletions;
+            if (changes < 10) labels.add('size: XS');
+            else if (changes < 50) labels.add('size: S');
+            else if (changes < 200) labels.add('size: M');
+            else if (changes < 500) labels.add('size: L');
             else labels.add('size: XL');
+            
+            // PR type from title
+            const title = pr.title.toLowerCase();
+            if (title.startsWith('feat')) labels.add('feature');
+            else if (title.startsWith('fix')) labels.add('bug');
+            else if (title.startsWith('docs')) labels.add('documentation');
+            else if (title.startsWith('refactor')) labels.add('refactor');
+            else if (title.startsWith('test')) labels.add('tests');
+            else if (title.startsWith('chore')) labels.add('chore');
             
             if (labels.size > 0) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
+                issue_number: pr.number,
                 labels: Array.from(labels)
               });
+              console.log(`Added labels: ${Array.from(labels).join(', ')}`);
             }
