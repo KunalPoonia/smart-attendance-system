@@ -1,0 +1,91 @@
+name: Welcome New Contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    name: Welcome
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const isIssue = !!context.payload.issue;
+            const author = isIssue 
+              ? context.payload.issue.user.login 
+              : context.payload.pull_request.user.login;
+            const number = isIssue 
+              ? context.payload.issue.number 
+              : context.payload.pull_request.number;
+            
+            // Check if this is their first contribution
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              creator: author,
+              state: 'all'
+            });
+            
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            });
+            
+            const authorPRs = prs.filter(pr => pr.user.login === author);
+            const totalContributions = issues.length + authorPRs.length;
+            
+            if (totalContributions > 1) {
+              console.log(`${author} is not a first-time contributor`);
+              return;
+            }
+            
+            let message;
+            
+            if (isIssue) {
+              message = `Welcome @${author}! Thanks for opening your first issue!
+              
+              We appreciate you taking the time to report this. Here's what happens next:
+              
+              1. Our bot will automatically add relevant labels
+              2. A maintainer will review your issue soon
+              3. Feel free to add more details if needed
+              
+              While you wait, check out our [README](../blob/master/README.md) and [Contributing Guidelines](../blob/master/CONTRIBUTING.md) if available.
+              
+              Thanks for contributing to Smart Attendance System!`;
+            } else {
+              message = `Welcome @${author}! Thanks for your first pull request!
+              
+              We're excited to review your contribution. Here's what happens next:
+              
+              1. Automated checks will run (CI, linting, tests)
+              2. A code quality report will be posted
+              3. A maintainer will review your changes
+              
+              Tips for a smooth review:
+              - Make sure all CI checks pass
+              - Respond to any feedback promptly
+              - Keep changes focused and well-documented
+              
+              Thanks for contributing to Smart Attendance System!`;
+            }
+            
+            try {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number,
+                body: message
+              });
+            } catch (e) {
+              console.log(`Could not post welcome message: ${e.message}`);
+            }

@@ -1,0 +1,168 @@
+name: Automated Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install analysis tools
+        run: pip install flake8 pylint radon lizard
+      
+      - name: Get changed Python files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.py
+      
+      - name: Run code analysis
+        if: steps.changed-files.outputs.any_changed == 'true'
+        id: analysis
+        run: |
+          echo "## Code Quality Report" > report.md
+          echo "" >> report.md
+          echo "### Changed Files" >> report.md
+          echo "\`\`\`" >> report.md
+          echo "${{ steps.changed-files.outputs.all_changed_files }}" >> report.md
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          echo "### Flake8 (Style & Errors)" >> report.md
+          echo "\`\`\`" >> report.md
+          flake8 ${{ steps.changed-files.outputs.all_changed_files }} --max-line-length=120 --statistics 2>&1 >> report.md || true
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          echo "### Cyclomatic Complexity" >> report.md
+          echo "\`\`\`" >> report.md
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "File: $file" >> report.md
+            radon cc "$file" -a -s 2>&1 >> report.md || true
+          done
+          echo "\`\`\`" >> report.md
+          echo "" >> report.md
+          
+          echo "### Maintainability Index" >> report.md
+          echo "\`\`\`" >> report.md
+          radon mi ${{ steps.changed-files.outputs.all_changed_files }} -s 2>&1 >> report.md || true
+          echo "\`\`\`" >> report.md
+          
+          echo "" >> report.md
+          echo "---" >> report.md
+          echo "*Automated code review by GitHub Actions*" >> report.md
+        continue-on-error: true
+      
+      - name: Post review comment
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = 'No Python files changed.';
+            
+            try {
+              report = fs.readFileSync('report.md', 'utf8');
+            } catch (e) {
+              console.log('No report generated');
+            }
+            
+            if (report.length > 60000) {
+              report = report.substring(0, 60000) + '\n\n... (truncated)';
+            }
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('Code Quality Report')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: report
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: report
+              });
+            }
+        continue-on-error: true
+
+  pr-checklist:
+    name: PR Checklist
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Add PR checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            const checklist = `## PR Checklist
+            
+            Please review and check off the following:
+            
+            ### Code Quality
+            - [ ] Code follows project style guidelines
+            - [ ] Self-review completed
+            - [ ] No unnecessary console.log/print statements
+            - [ ] No hardcoded values or secrets
+            
+            ### Testing
+            - [ ] Tests added/updated for new functionality
+            - [ ] All existing tests pass
+            - [ ] Manual testing completed
+            
+            ### Documentation
+            - [ ] Code comments added for complex logic
+            - [ ] README updated (if applicable)
+            
+            ### Security
+            - [ ] No sensitive data exposed
+            - [ ] Input validation implemented
+            
+            ---
+            
+            **PR Stats:**
+            | Metric | Value |
+            |--------|-------|
+            | Files Changed | ${pr.changed_files} |
+            | Additions | +${pr.additions} |
+            | Deletions | -${pr.deletions} |
+            | Total Changes | ${pr.additions + pr.deletions} |
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: checklist
+            });
+        continue-on-error: true

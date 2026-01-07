@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Students Absent - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-times me-2"></i>Mark Students Absent
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('bulk_mark_absent_by_class') }}" class="btn btn-warning">
+                    <i class="fas fa-users-slash me-1"></i>Bulk Mark by Class
+                </a>
+                <a href="{{ url_for('attendance') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter Students
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="departmentFilter" class="form-label">Department</label>
+                        <select class="form-select" id="departmentFilter">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="courseFilter" class="form-label">Course</label>
+                        <select class="form-select" id="courseFilter">
+                            <option value="">All Courses</option>
+                            {% for course in courses %}
+                                <option value="{{ course }}">{{ course }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="yearFilter" class="form-label">Year</label>
+                        <select class="form-select" id="yearFilter">
+                            <option value="">All Years</option>
+                            {% for year in years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="sectionFilter" class="form-label">Section</label>
+                        <select class="form-select" id="sectionFilter">
+                            <option value="">All Sections</option>
+                            {% for section in sections %}
+                                <option value="{{ section }}">{{ section }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary" onclick="filterStudents()">
+                            <i class="fas fa-search me-1"></i>Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mark Absent Form -->
+<div class="row">
+    <div class="col-12">
+        <form method="POST">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-times me-2"></i>Attendance Details
+                    </h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Attendance Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <label for="date" class="form-label">Date *</label>
+                            <input type="date" class="form-control" id="date" name="date" 
+                                   value="{{ date.today().isoformat() }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" name="subject" 
+                                   placeholder="e.g., Mathematics">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="class_period" class="form-label">Class Period</label>
+                            <select class="form-select" id="class_period" name="class_period">
+                                <option value="">Select Period</option>
+                                <option value="1st Period">1st Period</option>
+                                <option value="2nd Period">2nd Period</option>
+                                <option value="3rd Period">3rd Period</option>
+                                <option value="4th Period">4th Period</option>
+                                <option value="5th Period">5th Period</option>
+                                <option value="6th Period">6th Period</option>
+                                <option value="7th Period">7th Period</option>
+                                <option value="8th Period">8th Period</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="teacher_name" class="form-label">Teacher Name</label>
+                            <input type="text" class="form-control" id="teacher_name" name="teacher_name" 
+                                   placeholder="Teacher's name">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label for="remarks" class="form-label">Remarks (Optional)</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="2" 
+                                      placeholder="Additional notes or reasons for absence"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Students List -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th width="50">
+                                        <input type="checkbox" id="headerCheckbox" onchange="toggleAll()">
+                                    </th>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Course</th>
+                                    <th>Year</th>
+                                    <th>Section</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr class="student-row" 
+                                    data-department="{{ student.department }}"
+                                    data-course="{{ student.course }}"
+                                    data-year="{{ student.year }}"
+                                    data-section="{{ student.section }}">
+                                    <td>
+                                        <input type="checkbox" name="student_ids" value="{{ student.id }}" 
+                                               class="student-checkbox">
+                                    </td>
+                                    <td><strong>{{ student.student_id }}</strong></td>
+                                    <td>{{ student.name }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ student.department }}</span>
+                                    </td>
+                                    <td>{{ student.course }}</td>
+                                    <td>{{ student.year }}</td>
+                                    <td>{{ student.section }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not students %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Active Students Found</h4>
+                            <p class="text-muted">Please register students first</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if students %}
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span id="selectedCount">0</span> students selected
+                        </div>
+                        <div>
+                            <a href="{{ url_for('attendance') }}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-user-times me-1"></i>Mark Selected as Absent
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    updateSelectedCount();
+    
+    // Update selected count when checkboxes change
+    $('.student-checkbox').change(function() {
+        updateSelectedCount();
+    });
+    
+    $('#selectAll').change(function() {
+        const isChecked = $(this).is(':checked');
+        $('.student-row:visible .student-checkbox').prop('checked', isChecked);
+        updateSelectedCount();
+    });
+});
+
+function updateSelectedCount() {
+    const count = $('.student-checkbox:checked').length;
+    $('#selectedCount').text(count);
+}
+
+function toggleAll() {
+    const headerCheckbox = document.getElementById('headerCheckbox');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        if ($(checkbox).closest('.student-row').is(':visible')) {
+            checkbox.checked = headerCheckbox.checked;
+        }
+    });
+    
+    updateSelectedCount();
+}
+
+function filterStudents() {
+    const department = $('#departmentFilter').val().toLowerCase();
+    const course = $('#courseFilter').val().toLowerCase();
+    const year = $('#yearFilter').val().toLowerCase();
+    const section = $('#sectionFilter').val().toLowerCase();
+    
+    $('.student-row').each(function() {
+        const row = $(this);
+        const rowDept = row.data('department').toLowerCase();
+        const rowCourse = row.data('course').toLowerCase();
+        const rowYear = row.data('year').toLowerCase();
+        const rowSection = row.data('section').toLowerCase();
+        
+        const showRow = (department === '' || rowDept.includes(department)) &&
+                       (course === '' || rowCourse.includes(course)) &&
+                       (year === '' || rowYear.includes(year)) &&
+                       (section === '' || rowSection.includes(section));
+        
+        row.toggle(showRow);
+        
+        // Uncheck hidden rows
+        if (!showRow) {
+            row.find('.student-checkbox').prop('checked', false);
+        }
+    });
+    
+    updateSelectedCount();
+}
+</script>
+{% endblock %}

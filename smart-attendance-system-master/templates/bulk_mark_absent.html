@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Mark Absent - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-users-slash me-2"></i>Bulk Mark Absent
+            </h1>
+            <a href="{{ url_for('attendance') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Attendance
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-times me-2"></i>Mark Absent Students
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>How it works:</strong> This will mark all students who haven't been marked present or late today as absent.
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="date" class="form-label">Select Date</label>
+                        <input type="date" class="form-control" id="date" name="date" 
+                               value="{{ date.today().isoformat() }}" required>
+                        <div class="form-text">Choose the date for which to mark absent students</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Summary:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-users text-primary me-2"></i>Total Students: <strong>{{ students|length }}</strong></li>
+                            <li><i class="fas fa-info-circle text-info me-2"></i>Students not marked present/late will be marked as absent</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will mark multiple students as absent. Make sure you have already marked all present students for the selected date.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('attendance') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to mark absent students for the selected date?')">
+                            <i class="fas fa-users-slash me-1"></i>Mark Absent Students
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    if (!$('#date').val()) {
+        $('#date').val(today);
+    }
+});
+</script>
+{% endblock %}

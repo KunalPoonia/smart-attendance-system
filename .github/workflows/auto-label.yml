@@ -1,0 +1,144 @@
+name: Auto Label
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request_target:
+    types: [opened, edited, synchronize]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  label-issues:
+    name: Label Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    steps:
+      - name: Auto-label based on content
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = (issue.title || '').toLowerCase();
+            const body = (issue.body || '').toLowerCase();
+            const content = title + ' ' + body;
+            
+            const labelRules = [
+              { keywords: ['bug', 'error', 'fix', 'broken', 'crash', 'fail', 'issue', 'problem'], label: 'bug' },
+              { keywords: ['feature', 'enhancement', 'add', 'new', 'request', 'implement'], label: 'enhancement' },
+              { keywords: ['doc', 'readme', 'documentation', 'guide', 'tutorial'], label: 'documentation' },
+              { keywords: ['question', 'help', 'how to', 'support'], label: 'question' },
+              { keywords: ['ui', 'frontend', 'css', 'template', 'design', 'layout', 'style'], label: 'ui' },
+              { keywords: ['face', 'recognition', 'detection', 'camera', 'opencv', 'dlib'], label: 'face-recognition' },
+              { keywords: ['database', 'db', 'sql', 'model', 'migration', 'sqlite'], label: 'database' },
+              { keywords: ['api', 'endpoint', 'route', 'rest', 'json'], label: 'api' },
+              { keywords: ['auth', 'login', 'security', 'password', 'token'], label: 'security' },
+              { keywords: ['test', 'testing', 'pytest', 'unittest'], label: 'testing' },
+              { keywords: ['deploy', 'docker', 'ci', 'cd', 'pipeline', 'github action'], label: 'devops' },
+              { keywords: ['urgent', 'critical', 'asap', 'important', 'blocker'], label: 'priority: critical' },
+              { keywords: ['performance', 'slow', 'optimize', 'speed'], label: 'performance' },
+            ];
+            
+            const labelsToAdd = new Set();
+            
+            for (const rule of labelRules) {
+              if (rule.keywords.some(kw => content.includes(kw))) {
+                labelsToAdd.add(rule.label);
+              }
+            }
+            
+            if (labelsToAdd.size > 0) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: Array.from(labelsToAdd)
+                });
+                console.log(`Added labels: ${Array.from(labelsToAdd).join(', ')}`);
+              } catch (e) {
+                console.log(`Could not add labels: ${e.message}`);
+              }
+            }
+
+  label-pr:
+    name: Label PRs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_target'
+    steps:
+      - name: Label by files changed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            let files = [];
+            try {
+              const response = await github.rest.pulls.listFiles({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+              files = response.data;
+            } catch (e) {
+              console.log(`Could not get files: ${e.message}`);
+              return;
+            }
+            
+            const labels = new Set();
+            
+            const fileRules = [
+              { pattern: /\.py$/, label: 'python' },
+              { pattern: /test.*\.py$/, label: 'tests' },
+              { pattern: /\.html$/, label: 'frontend' },
+              { pattern: /\.css$/, label: 'frontend' },
+              { pattern: /\.js$/, label: 'frontend' },
+              { pattern: /template/, label: 'ui' },
+              { pattern: /face_recognition/, label: 'face-recognition' },
+              { pattern: /database|model/, label: 'database' },
+              { pattern: /\.github/, label: 'ci/cd' },
+              { pattern: /\.md$/, label: 'documentation' },
+              { pattern: /config|\.env|requirements/, label: 'configuration' },
+            ];
+            
+            for (const file of files) {
+              for (const rule of fileRules) {
+                if (rule.pattern.test(file.filename)) {
+                  labels.add(rule.label);
+                }
+              }
+            }
+            
+            // Size labels
+            const changes = pr.additions + pr.deletions;
+            if (changes < 10) labels.add('size: XS');
+            else if (changes < 50) labels.add('size: S');
+            else if (changes < 200) labels.add('size: M');
+            else if (changes < 500) labels.add('size: L');
+            else labels.add('size: XL');
+            
+            // PR type from title
+            const title = pr.title.toLowerCase();
+            if (title.startsWith('feat')) labels.add('feature');
+            else if (title.startsWith('fix')) labels.add('bug');
+            else if (title.startsWith('docs')) labels.add('documentation');
+            else if (title.startsWith('refactor')) labels.add('refactor');
+            else if (title.startsWith('test')) labels.add('tests');
+            else if (title.startsWith('chore')) labels.add('chore');
+            
+            if (labels.size > 0) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: Array.from(labels)
+                });
+                console.log(`Added labels: ${Array.from(labels).join(', ')}`);
+              } catch (e) {
+                console.log(`Could not add labels: ${e.message}`);
+              }
+            }

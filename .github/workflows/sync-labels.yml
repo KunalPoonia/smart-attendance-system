@@ -1,0 +1,96 @@
+name: Sync Labels
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - '.github/labels.yml'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    name: Sync Labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Sync labels from config
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let config;
+            try {
+              const content = fs.readFileSync('.github/labels.yml', 'utf8');
+              // Simple YAML parsing for labels
+              const lines = content.split('\n');
+              const labels = [];
+              let currentLabel = null;
+              
+              for (const line of lines) {
+                if (line.trim().startsWith('- name:')) {
+                  if (currentLabel) labels.push(currentLabel);
+                  currentLabel = { name: line.split(':')[1].trim().replace(/['"]/g, '') };
+                } else if (line.trim().startsWith('color:') && currentLabel) {
+                  currentLabel.color = line.split(':')[1].trim().replace(/['"]/g, '');
+                } else if (line.trim().startsWith('description:') && currentLabel) {
+                  currentLabel.description = line.split(':').slice(1).join(':').trim().replace(/['"]/g, '');
+                }
+              }
+              if (currentLabel) labels.push(currentLabel);
+              config = { labels };
+            } catch (e) {
+              console.log('Could not read labels.yml:', e.message);
+              return;
+            }
+            
+            if (!config || !config.labels || config.labels.length === 0) {
+              console.log('No labels found in config');
+              return;
+            }
+            
+            const { data: existingLabels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            const existingMap = new Map(existingLabels.map(l => [l.name, l]));
+            
+            for (const label of config.labels) {
+              if (!label.name || !label.color) continue;
+              
+              const existing = existingMap.get(label.name);
+              
+              try {
+                if (existing) {
+                  if (existing.color !== label.color.replace('#', '')) {
+                    console.log(`Updating label: ${label.name}`);
+                    await github.rest.issues.updateLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: label.name,
+                      color: label.color.replace('#', ''),
+                      description: label.description || ''
+                    });
+                  }
+                } else {
+                  console.log(`Creating label: ${label.name}`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color.replace('#', ''),
+                    description: label.description || ''
+                  });
+                }
+              } catch (e) {
+                console.log(`Error with label ${label.name}: ${e.message}`);
+              }
+            }
+            
+            console.log('Labels synced successfully!');

@@ -1,0 +1,117 @@
+name: Performance Testing
+
+on:
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install radon
+        continue-on-error: true
+      
+      - name: Run benchmarks
+        id: benchmark
+        run: |
+          echo "## Performance Report" > perf-report.md
+          echo "" >> perf-report.md
+          
+          echo "### Memory Usage" >> perf-report.md
+          echo "\`\`\`" >> perf-report.md
+          python -c "
+          import tracemalloc
+          tracemalloc.start()
+          try:
+              from app import app
+              with app.test_client() as client:
+                  client.get('/')
+                  current, peak = tracemalloc.get_traced_memory()
+                  print(f'Current memory: {current / 1024 / 1024:.2f} MB')
+                  print(f'Peak memory: {peak / 1024 / 1024:.2f} MB')
+          except Exception as e:
+              print(f'Could not profile: {e}')
+          tracemalloc.stop()
+          " >> perf-report.md 2>&1 || echo "Memory profiling skipped" >> perf-report.md
+          echo "\`\`\`" >> perf-report.md
+          echo "" >> perf-report.md
+          
+          echo "### Startup Time" >> perf-report.md
+          echo "\`\`\`" >> perf-report.md
+          python -c "
+          import time
+          start = time.time()
+          try:
+              from app import app
+              elapsed = time.time() - start
+              print(f'App import time: {elapsed:.3f}s')
+          except Exception as e:
+              print(f'Could not measure: {e}')
+          " >> perf-report.md 2>&1 || echo "Startup timing skipped" >> perf-report.md
+          echo "\`\`\`" >> perf-report.md
+          echo "" >> perf-report.md
+          
+          echo "### Code Metrics" >> perf-report.md
+          echo "\`\`\`" >> perf-report.md
+          radon raw app.py -s 2>&1 | head -20 >> perf-report.md || echo "Metrics skipped" >> perf-report.md
+          echo "\`\`\`" >> perf-report.md
+          
+          cat perf-report.md
+        continue-on-error: true
+      
+      - name: Post performance report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = 'Performance testing completed.';
+            
+            try {
+              report = fs.readFileSync('perf-report.md', 'utf8');
+            } catch (e) {
+              console.log('No report file');
+            }
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+            
+            const botComment = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes('Performance Report')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: report
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: report
+              });
+            }
+        continue-on-error: true

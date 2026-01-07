@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Face Recognition Settings - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-cog me-2"></i>Face Recognition Settings
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- System Status -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>System Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ stats.total_students }}</h4>
+                                <p class="mb-0">Registered Students</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ stats.total_samples }}</h4>
+                                <p class="mb-0">Training Samples</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-{{ 'success' if stats.is_trained else 'warning' }} text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ 'Trained' if stats.is_trained else 'Not Trained' }}</h4>
+                                <p class="mb-0">Model Status</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-{{ 'success' if stats.detection_active else 'secondary' }} text-white">
+                            <div class="card-body text-center">
+                                <h4>{{ 'Active' if stats.detection_active else 'Inactive' }}</h4>
+                                <p class="mb-0">Detection Status</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recognition Settings -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h me-2"></i>Recognition Parameters
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="confidence_threshold" class="form-label">
+                            Confidence Threshold
+                            <i class="fas fa-info-circle text-muted" 
+                               title="Higher values = more strict recognition (fewer false positives)"></i>
+                        </label>
+                        <div class="row">
+                            <div class="col-8">
+                                <input type="range" class="form-range" 
+                                       id="confidence_threshold" 
+                                       name="confidence_threshold"
+                                       min="0.1" max="1.0" step="0.05" 
+                                       value="{{ stats.confidence_threshold }}"
+                                       oninput="updateThresholdDisplay(this.value)">
+                            </div>
+                            <div class="col-4">
+                                <input type="number" class="form-control form-control-sm" 
+                                       id="threshold_display" 
+                                       value="{{ stats.confidence_threshold }}"
+                                       min="0.1" max="1.0" step="0.05" readonly>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">
+                            Current: {{ "%.2f"|format(stats.confidence_threshold) }} 
+                            ({{ "Strict" if stats.confidence_threshold > 0.7 else "Moderate" if stats.confidence_threshold > 0.5 else "Lenient" }})
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain me-2"></i>Model Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Model Training</h6>
+                    <p class="text-muted">
+                        Retrain the face recognition model with current data for improved accuracy.
+                    </p>
+                    <form method="POST" class="d-inline">
+                        <button type="submit" name="retrain_model" class="btn btn-success"
+                                {{ 'disabled' if stats.total_students == 0 else '' }}>
+                            <i class="fas fa-sync-alt me-1"></i>Retrain Model
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Recognition Tips</h6>
+                    <ul class="list-unstyled small text-muted">
+                        <li><i class="fas fa-check text-success me-1"></i>Use clear, well-lit photos</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Face should be front-facing</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Add multiple photos per student</li>
+                        <li><i class="fas fa-check text-success me-1"></i>Avoid glasses/masks if possible</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accuracy Improvement Tips -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Improving Recognition Accuracy
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-camera me-1"></i>Photo Quality
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-sun text-warning me-2"></i>Good lighting</li>
+                                    <li><i class="fas fa-eye text-info me-2"></i>Clear face visibility</li>
+                                    <li><i class="fas fa-expand text-primary me-2"></i>High resolution</li>
+                                    <li><i class="fas fa-user text-secondary me-2"></i>Single person only</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-database me-1"></i>Training Data
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-images text-primary me-2"></i>Multiple photos per student</li>
+                                    <li><i class="fas fa-angle-double-right text-success me-2"></i>Different angles</li>
+                                    <li><i class="fas fa-adjust text-warning me-2"></i>Various lighting conditions</li>
+                                    <li><i class="fas fa-smile text-info me-2"></i>Different expressions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-cogs me-1"></i>System Settings
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-sliders-h text-primary me-2"></i>Adjust confidence threshold</li>
+                                    <li><i class="fas fa-sync text-success me-2"></i>Regular model retraining</li>
+                                    <li><i class="fas fa-video text-info me-2"></i>Good camera positioning</li>
+                                    <li><i class="fas fa-lightbulb text-warning me-2"></i>Adequate room lighting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Performance Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Confidence Threshold</th>
+                                <th>Recognition Behavior</th>
+                                <th>Best Use Case</th>
+                                <th>Trade-offs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-success">
+                                <td><strong>0.8 - 1.0</strong></td>
+                                <td>Very Strict</td>
+                                <td>High security environments</td>
+                                <td>Few false positives, may miss some valid faces</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>0.6 - 0.8</strong></td>
+                                <td>Balanced</td>
+                                <td>General attendance tracking</td>
+                                <td>Good balance of accuracy and coverage</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><strong>0.4 - 0.6</strong></td>
+                                <td>Lenient</td>
+                                <td>Large groups, varied lighting</td>
+                                <td>Higher coverage, some false positives possible</td>
+                            </tr>
+                            <tr class="table-danger">
+                                <td><strong>0.1 - 0.4</strong></td>
+                                <td>Very Lenient</td>
+                                <td>Testing/debugging only</td>
+                                <td>Many false positives, not recommended for production</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateThresholdDisplay(value) {
+    document.getElementById('threshold_display').value = parseFloat(value).toFixed(2);
+}
+
+// Real-time status updates
+function updateSystemStatus() {
+    fetch('/api/face_recognition_status')
+        .then(response => response.json())
+        .then(data => {
+            // Update detection status indicator
+            const detectionCard = document.querySelector('.card.bg-success, .card.bg-secondary');
+            if (detectionCard) {
+                if (data.active) {
+                    detectionCard.className = 'card bg-success text-white';
+                    detectionCard.querySelector('h4').textContent = 'Active';
+                } else {
+                    detectionCard.className = 'card bg-secondary text-white';
+                    detectionCard.querySelector('h4').textContent = 'Inactive';
+                }
+            }
+        })
+        .catch(error => console.log('Status update failed:', error));
+}
+
+// Update status every 5 seconds
+setInterval(updateSystemStatus, 5000);
+
+// Initialize tooltips
+$(document).ready(function() {
+    $('[title]').tooltip();
+});
+</script>
+{% endblock %}

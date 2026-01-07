@@ -1,0 +1,102 @@
+name: PR Size Check
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  size-check:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const total = additions + deletions;
+            
+            let sizeLabel, message;
+            
+            if (total < 10) {
+              sizeLabel = 'size: XS';
+              message = 'Tiny change - quick review!';
+            } else if (total < 50) {
+              sizeLabel = 'size: S';
+              message = 'Small change - easy to review.';
+            } else if (total < 200) {
+              sizeLabel = 'size: M';
+              message = 'Medium change - reasonable review time.';
+            } else if (total < 500) {
+              sizeLabel = 'size: L';
+              message = 'Large change - consider breaking into smaller PRs.';
+            } else {
+              sizeLabel = 'size: XL';
+              message = 'Very large change - strongly consider splitting into smaller PRs.';
+            }
+            
+            // Remove existing size labels
+            try {
+              const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number
+              });
+              
+              for (const label of labels) {
+                if (label.name.startsWith('size:')) {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    name: label.name
+                  });
+                }
+              }
+            } catch (e) {
+              console.log(`Could not remove labels: ${e.message}`);
+            }
+            
+            // Add new size label
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [sizeLabel]
+              });
+            } catch (e) {
+              console.log(`Could not add label: ${e.message}`);
+            }
+            
+            // Post size summary only on open
+            if (context.payload.action === 'opened') {
+              const summary = `## PR Size: ${sizeLabel.replace('size: ', '')}
+              
+              | Metric | Count |
+              |--------|-------|
+              | Additions | +${additions} |
+              | Deletions | -${deletions} |
+              | Total Changes | ${total} |
+              
+              ${message}
+              
+              ---
+              *Tip: Smaller PRs get reviewed faster and are less likely to have bugs.*`;
+              
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: summary
+                });
+              } catch (e) {
+                console.log(`Could not post comment: ${e.message}`);
+              }
+            }
