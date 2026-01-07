@@ -1,15 +1,14 @@
-/* Fixed Layout - Scrollable */
+/* Fixed Layout - No Scrolling */
 
-/* Allow body scrolling */
+/* Prevent body scrolling */
 html, body {
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
 }
 
-/* Main container layout */
+/* Main container fixed layout */
 body {
     display: flex;
     flex-direction: column;
@@ -23,35 +22,41 @@ body {
     max-height: 60px;
 }
 
-/* Main content area - scrollable */
+/* Main content area - fills remaining space */
 .main-content {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    min-height: calc(100vh - 60px);
+    height: calc(100vh - 60px);
     padding: 20px;
 }
 
-/* Container adjustments */
+/* Container adjustments for fixed layout */
 .container-fluid {
-    min-height: auto;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
 }
 
-/* Card adjustments - allow natural height */
+/* Card adjustments for fixed height */
 .card-glass,
 .card {
+    max-height: calc(100vh - 140px);
     display: flex;
     flex-direction: column;
 }
 
 .card-body {
     flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-/* Video feed container */
+/* Video feed container - fixed aspect ratio */
 .video-container {
     position: relative;
     width: 100%;
+    max-height: calc(100vh - 200px);
     aspect-ratio: 4/3;
     overflow: hidden;
 }
@@ -63,40 +68,48 @@ body {
     object-fit: contain;
 }
 
-/* Table containers - scrollable */
+/* Table containers - scrollable within fixed height */
 .table-responsive {
+    max-height: calc(100vh - 300px);
     overflow-y: auto;
     overflow-x: auto;
 }
 
-/* Form containers */
+/* Form containers - scrollable if needed */
 .form-container {
+    max-height: calc(100vh - 200px);
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 10px;
 }
 
-/* Dashboard cards */
+/* Dashboard cards - fixed grid */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
 }
 
-/* Stats cards */
+/* Stats cards - fixed height */
 .stat-card {
+    height: 150px;
     min-height: 150px;
+    max-height: 150px;
 }
 
-/* Chart containers */
+/* Chart containers - fixed height */
 .chart-container {
     height: 300px;
     min-height: 300px;
+    max-height: 300px;
     position: relative;
 }
 
-/* Sidebar */
+/* Sidebar - fixed height */
 .sidebar {
+    height: calc(100vh - 60px);
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -111,10 +124,11 @@ body {
     overflow-y: auto;
 }
 
-/* Reports page */
+/* Reports page specific */
 .reports-container {
     display: grid;
     grid-template-rows: auto 1fr;
+    height: calc(100vh - 100px);
     gap: 20px;
 }
 
@@ -127,10 +141,11 @@ body {
     overflow-x: hidden;
 }
 
-/* Students page */
+/* Students page specific */
 .students-container {
     display: flex;
     flex-direction: column;
+    height: calc(100vh - 100px);
 }
 
 .students-filters {
@@ -144,11 +159,12 @@ body {
     overflow-x: hidden;
 }
 
-/* Attendance page */
+/* Attendance page specific */
 .attendance-container {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
+    height: calc(100vh - 100px);
 }
 
 .attendance-main {
@@ -161,11 +177,12 @@ body {
     overflow-x: hidden;
 }
 
-/* Mark attendance page */
+/* Mark attendance page specific */
 .mark-attendance-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    height: calc(100vh - 100px);
 }
 
 .camera-section {
@@ -178,13 +195,14 @@ body {
     overflow-x: hidden;
 }
 
-/* Registration page */
+/* Registration page specific */
 .registration-container {
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar for better UX */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -209,14 +227,20 @@ body {
     .attendance-container,
     .mark-attendance-container {
         grid-template-columns: 1fr;
+        height: auto;
+        max-height: calc(100vh - 100px);
     }
     
     .main-content {
         padding: 10px;
     }
+    
+    .table-responsive {
+        max-height: calc(100vh - 250px);
+    }
 }
 
-/* Box sizing */
+/* Ensure no horizontal overflow */
 * {
     box-sizing: border-box;
 }
@@ -231,7 +255,7 @@ body {
     padding-right: 10px;
 }
 
-/* Animations */
+/* Fix for fade-in animations not causing scroll */
 .fade-in-up,
 .fade-in,
 .stagger-1,
@@ -240,7 +264,7 @@ body {
     animation-fill-mode: backwards;
 }
 
-/* Container */
+/* Prevent content from pushing layout */
 .container,
 .container-fluid {
     max-width: 100%;
@@ -248,42 +272,64 @@ body {
     padding-right: 15px;
 }
 
-/* Video feed */
+/* Video feed specific sizing */
 #videoFeed {
+    max-height: calc(100vh - 250px);
     width: 100%;
     object-fit: contain;
     background: #000;
 }
 
-/* Lists */
-.detected-faces-list,
-.today-attendance-list {
+/* Detected faces list - fixed height */
+.detected-faces-list {
+    max-height: calc(100vh - 300px);
     overflow-y: auto;
 }
 
-/* Chart canvas */
+/* Today's attendance sidebar */
+.today-attendance-list {
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+}
+
+/* Chart canvas sizing */
 canvas {
     max-height: 100% !important;
 }
 
-/* Flash messages - fixed position */
+/* Prevent flash messages from causing scroll */
 .alert {
-    position: relative;
-    margin-bottom: 1rem;
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease-out;
 }
 
-/* Modal scroll */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Ensure modals don't cause body scroll */
 body.modal-open {
     overflow: hidden;
 }
 
-/* Dropdown */
+/* Fix for dropdown menus */
 .dropdown-menu {
     max-height: 300px;
     overflow-y: auto;
 }
 
-/* Pagination */
+/* Pagination fixed at bottom */
 .pagination-container {
     position: sticky;
     bottom: 0;
