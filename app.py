@@ -7,14 +7,17 @@ from datetime import datetime, date, timedelta
 import threading
 import time
 import logging
+from utils.logger import setup_logger
 
+# Initialize logger
+logger = setup_logger()
 # Try to import cv2 with error handling
 try:
     import cv2
     CV2_AVAILABLE = True
-    print("✅ OpenCV imported successfully")
+    logger.info("OpenCV imported successfully")
 except ImportError as e:
-    print(f"⚠️  OpenCV not available: {e}")
+    logger.warning(f"OpenCV not available: {e}")
     CV2_AVAILABLE = False
 
 # Import custom modules
@@ -27,22 +30,19 @@ try:
     from face_recognition.face_encoder import FaceEncoder
     from face_recognition.face_detector import FaceDetector
     FACE_RECOGNITION_AVAILABLE = True
-    print("✅ Face recognition modules imported successfully")
+    logger.info("Starting Face Recognition System...")
 except ImportError as e:
-    print(f"⚠️  Face recognition not available: {str(e)}")
+    logger.warning(f"Face recognition not available: {str(e)}")
     FaceEncoder = None
     FaceDetector = None
     FACE_RECOGNITION_AVAILABLE = False
 from utils.helpers import (
     save_uploaded_file, export_attendance_to_csv, export_attendance_to_excel,
     generate_attendance_summary, validate_student_data, create_directory_structure,
-    setup_logging, get_attendance_status
+    get_attendance_status
 )
 
-# Setup logging
-setup_logging()
-logger = logging.getLogger(__name__)
-
+# (The redundant logging setup lines are deleted here)
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -101,6 +101,7 @@ def index():
                              today_attendance=today_attendance,
                              recent_records=recent_records)
     except Exception as e:
+        logger.error(f"Error occurred: {e}")
         logger.error(f"Error in index route: {str(e)}")
         flash('Error loading dashboard', 'error')
         return render_template('index.html')
@@ -695,9 +696,8 @@ def leave_management():
                              date_from=date_from,
                              date_to=date_to)
     except Exception as e:
-        import traceback
         logger.error(f"Error in leave management: {str(e)}")
-        logger.error(traceback.format_exc())
+        logger.exception("Full traceback:") # This automatically logs the stack trace
         flash('Error loading leave management', 'error')
         return render_template('leave_management.html', 
                              leave_requests=[], 
