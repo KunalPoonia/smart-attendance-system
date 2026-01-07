@@ -2,10 +2,11 @@
 """
 Quick test to verify system functionality
 """
-
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Add the parent directory (root) to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from simple_camera import SimpleCamera
 from face_recognition.face_detector import FaceDetector

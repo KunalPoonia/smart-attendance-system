@@ -3,7 +3,11 @@
 Simple Camera Module for Attendance System
 Basic camera functionality with OpenCV support
 """
+import sys
+import os
 
+# Add the parent directory (root) to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import threading
 import time
 import logging
