@@ -10,16 +10,6 @@ An automated attendance system using face recognition technology to mark student
 - **Frontend**: HTML/CSS/JavaScript
 - **Libraries**: NumPy, Pandas, Pillow
 
-### Dlib Installation: Follow this Github Repo for installing dlib : [Visit Page](https://github.com/z-mahmud22/Dlib_Windows_Python3.x/tree/main)
-
-# Core backend
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-Werkzeug>=2.3.7
-
-# Computer Vision
-opencv-python==4.8.1.78
-
 ## Features
 - ✅ Face registration for new students
 - ✅ Real-time face recognition via webcam
@@ -86,7 +76,7 @@ For full face recognition capabilities:
    ```
 
 ### System Requirements
-- Python 3.7+ 
+- Python 3.7+
 - CMake (for dlib compilation)
 - Webcam/Camera device
 - 4GB+ RAM recommended

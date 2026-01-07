@@ -1,8 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
 from datetime import datetime
 import json
-
-db = SQLAlchemy()
 
 class Student(db.Model):
     """Student model for storing student information and face encodings"""
@@ -77,51 +75,6 @@ class AttendanceRecord(db.Model):
             'status': self.status,
             'confidence_score': self.confidence_score
         }
-
-class LeaveRequest(db.Model):
-    """Leave request model for student leave management"""
-    __tablename__ = 'leave_requests'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
-    leave_type = db.Column(db.String(50), nullable=False)  # Sick, Personal, Family, Academic, Other
-    start_date = db.Column(db.Date, nullable=False)
-    end_date = db.Column(db.Date, nullable=False)
-    reason = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='Pending')  # Pending, Approved, Rejected
-    reviewed_by = db.Column(db.String(100))  # Admin/Teacher who reviewed
-    reviewed_at = db.Column(db.DateTime)
-    review_notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationship
-    student = db.relationship('Student', backref=db.backref('leave_requests', lazy=True))
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'student_id': self.student_id,
-            'student_name': self.student.name if self.student else None,
-            'student_roll': self.student.student_id if self.student else None,
-            'leave_type': self.leave_type,
-            'start_date': self.start_date.isoformat() if self.start_date else None,
-            'end_date': self.end_date.isoformat() if self.end_date else None,
-            'reason': self.reason,
-            'status': self.status,
-            'reviewed_by': self.reviewed_by,
-            'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None,
-            'review_notes': self.review_notes,
-            'created_at': self.created_at.isoformat() if self.created_at else None
-        }
-    
-    @property
-    def duration_days(self):
-        """Calculate leave duration in days"""
-        if self.start_date and self.end_date:
-            return (self.end_date - self.start_date).days + 1
-        return 0
-
 
 class AttendanceSession(db.Model):
     """Session model for managing attendance sessions"""

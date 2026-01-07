@@ -1,1 +1,0 @@
-# Face recognition module placeholder

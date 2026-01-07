@@ -67,7 +67,7 @@ def inject_datetime():
     return {'datetime': datetime, 'date': date}
 
 # Routes
-@app.route('/')
+@app.route('/', endpoint='main.index')
 def index():
     """Main dashboard"""
     try:
@@ -88,7 +88,7 @@ def index():
                              recent_records=[],
                              face_recognition_available=False)
 
-@app.route('/students')
+@app.route('/students', endpoint='students.index')
 def students():
     """Student management page"""
     try:
@@ -98,7 +98,7 @@ def students():
         print(f"Error: {e}")
         return render_template('students.html', students=[])
 
-@app.route('/register_student', methods=['GET', 'POST'])
+@app.route('/register_student', methods=['GET', 'POST'], endpoint='students.register')
 def register_student():
     """Register new student"""
     if request.method == 'GET':
@@ -162,7 +162,7 @@ def register_student():
         flash('Error registering student', 'error')
         return render_template('register_student.html')
 
-@app.route('/attendance')
+@app.route('/attendance', endpoint='attendance.index')
 def attendance():
     """Attendance management page"""
     try:
@@ -193,12 +193,12 @@ def attendance():
         print(f"Error: {e}")
         return render_template('attendance.html', records=[])
 
-@app.route('/mark_attendance')
+@app.route('/mark_attendance', endpoint='attendance.mark_page')
 def mark_attendance():
     """Manual attendance marking page"""
     return render_template('mark_attendance.html', face_recognition_available=False)
 
-@app.route('/mark_manual_attendance', methods=['POST'])
+@app.route('/mark_manual_attendance', methods=['POST'], endpoint='attendance.manual_mark')
 def mark_manual_attendance():
     """Mark attendance manually using student ID"""
     try:
@@ -246,7 +246,7 @@ def mark_manual_attendance():
         flash('Error marking attendance', 'error')
         return redirect(url_for('mark_attendance'))
 
-@app.route('/reports')
+@app.route('/reports', endpoint='attendance.reports')
 def reports():
     """Simple reports page"""
     try:
