@@ -1,5 +1,7 @@
 # 🎓 Smart Attendance System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 An open‑source, production‑ready **Face Recognition–based Attendance System** built as a **B.Tech final/major project**. Designed to prevent proxy attendance, ensure accountability, and keep things clean, simple, and scalable.
 
 > Built the old-school way (solid fundamentals) with a future-facing mindset.
@@ -275,7 +277,7 @@ Read: `SECURITY.md`
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 You are free to:
 
