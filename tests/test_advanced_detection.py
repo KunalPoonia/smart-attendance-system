@@ -2,9 +2,12 @@
 """
 Test script for Advanced Face Detection System
 """
-
 import sys
 import os
+
+# Add the parent directory (root) to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import cv2
 import numpy as np
 
