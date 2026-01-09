@@ -9,6 +9,16 @@ import threading
 import time
 import logging
 
+# Try to import Flask-Limiter for rate limiting
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    LIMITER_AVAILABLE = True
+except ImportError:
+    LIMITER_AVAILABLE = False
+    Limiter = None
+    get_remote_address = None
+
 # Try to import cv2 with error handling
 try:
     import cv2
@@ -45,7 +55,7 @@ except ImportError as e:
 from src.utils.helpers import (
     save_uploaded_file, export_attendance_to_csv, export_attendance_to_excel,
     generate_attendance_summary, validate_student_data, create_directory_structure,
-    setup_logging, get_attendance_status
+    setup_logging, get_attendance_status, sanitize_input, validate_leave_request_data
 )
 
 # Setup logging
@@ -188,6 +198,7 @@ def students():
         return render_template('students_clean.html', students=[])
 
 @app.route('/register_student', methods=['GET', 'POST'])
+@rate_limit("10 per minute")
 def register_student():
     """Register new student"""
     if request.method == 'GET':
@@ -505,6 +516,7 @@ def get_detected_faces():
         return jsonify({'faces': []})
 
 @app.route('/mark_manual_attendance', methods=['POST'])
+@rate_limit("30 per minute")
 def mark_manual_attendance():
     """Mark attendance manually using student ID"""
     try:
@@ -804,31 +816,33 @@ def leave_management():
                              date_to='')
 
 @app.route('/apply_leave', methods=['POST'])
+@rate_limit("5 per minute")
 def apply_leave():
     """Apply for leave"""
     try:
-        student_id = request.form.get('student_id')
-        leave_type = request.form.get('leave_type')
-        start_date = request.form.get('start_date')
-        end_date = request.form.get('end_date')
-        reason = request.form.get('reason')
+        # Get form data
+        data = {
+            'student_id': request.form.get('student_id'),
+            'leave_type': request.form.get('leave_type'),
+            'start_date': request.form.get('start_date'),
+            'end_date': request.form.get('end_date'),
+            'reason': request.form.get('reason')
+        }
         
-        # Validation
-        if not all([student_id, leave_type, start_date, end_date, reason]):
-            flash('All fields are required', 'error')
+        # Validate and sanitize input
+        errors, sanitized_data = validate_leave_request_data(data)
+        if errors:
+            for error in errors:
+                flash(error, 'error')
             return redirect(url_for('leave_management'))
         
         # Parse dates
-        start = datetime.strptime(start_date, '%Y-%m-%d').date()
-        end = datetime.strptime(end_date, '%Y-%m-%d').date()
-        
-        if end < start:
-            flash('End date cannot be before start date', 'error')
-            return redirect(url_for('leave_management'))
+        start = datetime.strptime(sanitized_data['start_date'], '%Y-%m-%d').date()
+        end = datetime.strptime(sanitized_data['end_date'], '%Y-%m-%d').date()
         
         # Check for overlapping leave requests
         existing = LeaveRequest.query.filter(
-            LeaveRequest.student_id == student_id,
+            LeaveRequest.student_id == sanitized_data['student_id'],
             LeaveRequest.status != 'Rejected',
             LeaveRequest.start_date <= end,
             LeaveRequest.end_date >= start
@@ -838,20 +852,20 @@ def apply_leave():
             flash('A leave request already exists for this period', 'warning')
             return redirect(url_for('leave_management'))
         
-        # Create leave request
+        # Create leave request with sanitized data
         leave_request = LeaveRequest(
-            student_id=student_id,
-            leave_type=leave_type,
+            student_id=sanitized_data['student_id'],
+            leave_type=sanitized_data['leave_type'],
             start_date=start,
             end_date=end,
-            reason=reason
+            reason=sanitized_data['reason']  # Already sanitized
         )
         
         db.session.add(leave_request)
         db.session.commit()
         
-        student = Student.query.get(student_id)
-        logger.info(f"Leave request created for {student.name}: {start_date} to {end_date}")
+        student = Student.query.get(sanitized_data['student_id'])
+        logger.info(f"Leave request created for {student.name}: {sanitized_data['start_date']} to {sanitized_data['end_date']}")
         flash('Leave request submitted successfully!', 'success')
         
     except Exception as e:
@@ -861,6 +875,7 @@ def apply_leave():
     return redirect(url_for('leave_management'))
 
 @app.route('/review_leave', methods=['POST'])
+@rate_limit("20 per minute")
 def review_leave():
     """Review (approve/reject) a leave request"""
     try:
@@ -1042,6 +1057,7 @@ def face_recognition_status():
     })
 
 @app.route('/delete_student/<int:student_id>', methods=['POST'])
+@rate_limit("5 per minute")
 def delete_student(student_id):
     """Delete a student (soft delete)"""
     try:
@@ -1101,6 +1117,7 @@ def permanently_delete_student(student_id):
         }), 500
 
 @app.route('/update_attendance_status', methods=['POST'])
+@rate_limit("30 per minute")
 def update_attendance_status():
     """Update attendance status for a student"""
     try:
