@@ -8,6 +8,8 @@ import threading
 import time
 import logging
 
+
+
 # Try to import cv2 with error handling
 try:
     import cv2
@@ -440,7 +442,19 @@ def mark_manual_attendance():
         if existing_record:
             flash(f'{student.name} already marked present today', 'warning')
             return redirect(url_for('mark_attendance'))
-        
+         if approved_leave:
+            flash(f'{student.name} is on approved leave today', 'warning')
+            return redirect(url_for('mark_attendance'))
+
+          # Prevent marking present if student is on leave
+        approved_leave = LeaveRequest.query.filter(
+              LeaveRequest.student_id == student.id,
+              LeaveRequest.status == 'Approved',
+              LeaveRequest.start_date <= today,
+              LeaveRequest.end_date >= today
+    
+        ).first()
+       
         # Create attendance record
         now = datetime.now()
         # For manual attendance marking, always mark as Present
@@ -1023,7 +1037,8 @@ def update_attendance_status():
             }), 400
         
         # Validate status
-        valid_statuses = ['Present', 'Absent', 'Late', 'Excused']
+       valid_statuses = ['Present', 'Absent', 'Late', 'Excused', 'On Leave']
+
         if new_status not in valid_statuses:
             return jsonify({
                 'success': False,
