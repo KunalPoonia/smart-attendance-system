@@ -1,15 +1,22 @@
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
 
 # Virtual environment
 venv/
+env/
+.venv/
 
 # Environment variables
 .env
+.env.local
 
 # Database files
 *.db
+instance/
 
 # Logs
 logs/
@@ -18,3 +25,26 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Data directories (generated at runtime)
+face_data/
+student_images/
+exports/
+models/*.caffemodel
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Distribution
+dist/
+build/
+*.egg-info/

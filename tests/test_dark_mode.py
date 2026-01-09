@@ -88,6 +88,6 @@ def client():
     
     with app.test_client() as client:
         with app.app_context():
-            from database.models import db
+            from src.database.models import db
             db.create_all()
         yield client

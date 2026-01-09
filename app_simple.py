@@ -6,19 +6,19 @@ from datetime import datetime, date, timedelta
 import logging
 # Use enhanced face recognition system with multiple fallbacks
 try:
-    from face_recognition_enhanced import EnhancedFaceRecognition
+    from src.core.face_recognition_enhanced import EnhancedFaceRecognition
     FaceRecognitionClass = EnhancedFaceRecognition
     print("🚀 Using Enhanced Face Recognition System")
 except ImportError as e:
     print(f"⚠️  Enhanced face recognition not available, trying advanced...")
     try:
-        from face_detection_new import AdvancedFaceDetection
+        from src.core.face_detection_new import AdvancedFaceDetection
         FaceRecognitionClass = AdvancedFaceDetection
         print("✅ Using Advanced Face Detection System")
     except ImportError as e2:
         print(f"⚠️  Advanced face detection not available, trying simple...")
         try:
-            from face_recognition_opencv_simple import OpenCVSimpleFaceRecognition
+            from src.core.face_recognition_opencv_simple import OpenCVSimpleFaceRecognition
             FaceRecognitionClass = OpenCVSimpleFaceRecognition
             print("✅ Using OpenCV Simple Face Recognition System")
         except ImportError as e3:

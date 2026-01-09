@@ -18,7 +18,7 @@ class TestLeaveManagement:
     def setup(self):
         """Set up test fixtures."""
         from app import app, db
-        from database.models import Student, LeaveRequest, AttendanceRecord
+        from src.database.models import Student, LeaveRequest, AttendanceRecord
         
         app.config['TESTING'] = True
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'

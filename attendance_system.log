@@ -3854,3 +3854,6 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'submit
 2026-01-07 04:48:28,355 - werkzeug - INFO - 127.0.0.1 - - [07/Jan/2026 04:48:28] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
 2026-01-07 04:48:28,990 - simple_camera - INFO - Camera stopped
 2026-01-07 04:48:28,990 - face_recognition.face_detector - INFO - Face detection stopped
+2026-01-09 16:14:00,623 - src.face_recognition.face_encoder - INFO - Face encoder initialized with OpenCV
+2026-01-09 16:14:00,639 - src.face_recognition.face_detector - INFO - Face detector initialized with OpenCV
+2026-01-09 16:14:00,647 - app - INFO - Database tables created

@@ -20,13 +20,13 @@ except ImportError as e:
 
 # Import custom modules
 from config import Config
-from database.models import db, Student, AttendanceRecord, AttendanceSession, LeaveRequest
-from simple_camera import SimpleCamera
+from src.database.models import db, Student, AttendanceRecord, AttendanceSession, LeaveRequest
+from src.core.simple_camera import SimpleCamera
 
 # Try to import face recognition modules (graceful fallback if not available)
 try:
-    from face_recognition.face_encoder import FaceEncoder
-    from face_recognition.face_detector import FaceDetector
+    from src.face_recognition.face_encoder import FaceEncoder
+    from src.face_recognition.face_detector import FaceDetector
     FACE_RECOGNITION_AVAILABLE = True
     print("✅ Face recognition modules imported successfully")
 except ImportError as e:
@@ -34,7 +34,7 @@ except ImportError as e:
     FaceEncoder = None
     FaceDetector = None
     FACE_RECOGNITION_AVAILABLE = False
-from utils.helpers import (
+from src.utils.helpers import (
     save_uploaded_file, export_attendance_to_csv, export_attendance_to_excel,
     generate_attendance_summary, validate_student_data, create_directory_structure,
     setup_logging, get_attendance_status
