@@ -23,40 +23,64 @@
     <div class="stats-grid slide-up">
         <div class="stat-card">
             <div class="stat-label">Total Students</div>
-            <div class="stat-value">{{ students|length }}</div>
+            <div class="stat-value">{{ pagination.total if pagination else 0 }}</div>
             <div class="text-muted" style="font-size: 12px; margin-top: 4px;">Active registrations</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Departments</div>
-            <div class="stat-value">{{ students|map(attribute='department')|select|unique|list|length }}</div>
-            <div class="text-muted" style="font-size: 12px; margin-top: 4px;">Unique departments</div>
+            <div class="stat-label">Showing</div>
+            <div class="stat-value">{{ students|length }}</div>
+            <div class="text-muted" style="font-size: 12px; margin-top: 4px;">On this page</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Face Recognition Ready</div>
-            <div class="stat-value">{{ students|selectattr('face_encoding')|list|length }}</div>
-            <div class="text-muted" style="font-size: 12px; margin-top: 4px;">With face data</div>
+            <div class="stat-label">Page</div>
+            <div class="stat-value">{{ pagination.page if pagination else 1 }}</div>
+            <div class="text-muted" style="font-size: 12px; margin-top: 4px;">of {{ pagination.pages if pagination else 1 }}</div>
         </div>
     </div>
     
     <!-- Search & Filter -->
     <div class="card mb-4 slide-up">
         <div class="card-body">
-            <div class="flex gap-3 flex-wrap items-center">
+            <form method="GET" action="{{ url_for('students') }}" class="flex gap-3 flex-wrap items-center">
                 <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
                     <div style="position: relative;">
                         <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-                        <input type="text" id="search-input" class="form-input" style="padding-left: 36px;" placeholder="Search students..." onkeyup="filterStudents()">
+                        <input type="text" name="search" class="form-input" style="padding-left: 36px;" 
+                               placeholder="Search students..." value="{{ current_search or '' }}">
                     </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
-                    <select id="dept-filter" class="form-input" onchange="filterStudents()">
+                    <select name="department" class="form-input">
                         <option value="">All Departments</option>
-                        {% for dept in students|map(attribute='department')|select|unique|sort %}
-                        <option value="{{ dept }}">{{ dept }}</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {{ 'selected' if dept == current_department else '' }}>{{ dept }}</option>
                         {% endfor %}
                     </select>
                 </div>
-            </div>
+                <div class="form-group" style="margin-bottom: 0; min-width: 120px;">
+                    <select name="year" class="form-input">
+                        <option value="">All Years</option>
+                        {% for year in years %}
+                        <option value="{{ year }}" {{ 'selected' if year == current_year else '' }}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; min-width: 120px;">
+                    <select name="per_page" class="form-input">
+                        <option value="25" {{ 'selected' if per_page == 25 else '' }}>25 per page</option>
+                        <option value="50" {{ 'selected' if per_page == 50 else '' }}>50 per page</option>
+                        <option value="100" {{ 'selected' if per_page == 100 else '' }}>100 per page</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                {% if current_search or current_department or current_year %}
+                <a href="{{ url_for('students') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+                {% endif %}
+            </form>
         </div>
     </div>
 
@@ -114,6 +138,56 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="card-footer">
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing {{ ((pagination.page - 1) * pagination.per_page + 1) }} to 
+                    {{ (pagination.page * pagination.per_page) if pagination.page < pagination.pages else pagination.total }} 
+                    of {{ pagination.total }} students
+                </div>
+                <div class="pagination">
+                    {% if pagination.has_prev %}
+                    <a href="{{ url_for('students', page=pagination.prev_num, search=current_search, department=current_department, year=current_year, per_page=per_page) }}" 
+                       class="pagination-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% else %}
+                    <span class="pagination-btn disabled">
+                        <i class="fas fa-chevron-left"></i>
+                    </span>
+                    {% endif %}
+                    
+                    {% for page_num in pagination.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != pagination.page %}
+                            <a href="{{ url_for('students', page=page_num, search=current_search, department=current_department, year=current_year, per_page=per_page) }}" 
+                               class="pagination-btn">{{ page_num }}</a>
+                            {% else %}
+                            <span class="pagination-btn active">{{ page_num }}</span>
+                            {% endif %}
+                        {% else %}
+                        <span class="pagination-btn disabled">…</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if pagination.has_next %}
+                    <a href="{{ url_for('students', page=pagination.next_num, search=current_search, department=current_department, year=current_year, per_page=per_page) }}" 
+                       class="pagination-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="pagination-btn disabled">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         {% else %}
         <div class="card-body">
             <div class="empty-state">

@@ -128,14 +128,72 @@ def index():
 
 @app.route('/students')
 def students():
-    """Student management page"""
+    """Student management page with pagination"""
     try:
-        students = Student.query.filter_by(is_active=True).all()
-        return render_template('students_clean.html', students=students)
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', app.config['STUDENTS_PER_PAGE'], type=int), 
+                      app.config['MAX_PER_PAGE'])
+        
+        # Get search parameters
+        search = request.args.get('search', '').strip()
+        department_filter = request.args.get('department', '')
+        year_filter = request.args.get('year', '')
+        
+        # Build query
+        query = Student.query.filter_by(is_active=True)
+        
+        # Apply search filter
+        if search:
+            query = query.filter(
+                db.or_(
+                    Student.name.ilike(f'%{search}%'),
+                    Student.student_id.ilike(f'%{search}%'),
+                    Student.email.ilike(f'%{search}%')
+                )
+            )
+        
+        # Apply department filter
+        if department_filter:
+            query = query.filter(Student.department == department_filter)
+        
+        # Apply year filter
+        if year_filter:
+            query = query.filter(Student.year == year_filter)
+        
+        # Order by name for consistent pagination
+        query = query.order_by(Student.name.asc())
+        
+        # Paginate results
+        students_pagination = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        # Get filter options
+        departments = db.session.query(Student.department).filter(
+            Student.is_active == True,
+            Student.department.isnot(None)
+        ).distinct().all()
+        years = db.session.query(Student.year).filter(
+            Student.is_active == True,
+            Student.year.isnot(None)
+        ).distinct().all()
+        
+        return render_template('students_clean.html', 
+                             students=students_pagination.items,
+                             pagination=students_pagination,
+                             departments=[d[0] for d in departments if d[0]],
+                             years=[y[0] for y in years if y[0]],
+                             current_search=search,
+                             current_department=department_filter,
+                             current_year=year_filter,
+                             per_page=per_page)
     except Exception as e:
         logger.error(f"Error in students route: {str(e)}")
         flash('Error loading students', 'error')
-        return render_template('students_clean.html', students=[])
+        return render_template('students_clean.html', students=[], pagination=None)
 
 @app.route('/register_student', methods=['GET', 'POST'])
 def register_student():
@@ -241,42 +299,83 @@ def register_student():
 
 @app.route('/attendance')
 def attendance():
-    """Attendance management page"""
+    """Attendance management page with pagination"""
     try:
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', app.config['ATTENDANCE_PER_PAGE'], type=int), 
+                      app.config['MAX_PER_PAGE'])
+        
         # Get filter parameters
         date_filter = request.args.get('date', date.today().isoformat())
         department_filter = request.args.get('department', '')
         year_filter = request.args.get('year', '')
+        status_filter = request.args.get('status', '')
+        search = request.args.get('search', '').strip()
         
         # Build query
         query = AttendanceRecord.query
         
+        # Apply date filter
         if date_filter:
             query = query.filter(AttendanceRecord.date == date_filter)
         
+        # Apply search filter (student name or ID)
+        if search:
+            query = query.join(Student).filter(
+                db.or_(
+                    Student.name.ilike(f'%{search}%'),
+                    Student.student_id.ilike(f'%{search}%')
+                )
+            )
+        
+        # Apply department filter
         if department_filter:
             query = query.join(Student).filter(Student.department == department_filter)
         
+        # Apply year filter
         if year_filter:
             query = query.join(Student).filter(Student.year == year_filter)
         
-        records = query.order_by(AttendanceRecord.created_at.desc()).all()
+        # Apply status filter
+        if status_filter:
+            query = query.filter(AttendanceRecord.status == status_filter)
         
-        # Get unique departments and years for filters
-        departments = db.session.query(Student.department).distinct().all()
-        years = db.session.query(Student.year).distinct().all()
+        # Order by created_at desc for most recent first
+        query = query.order_by(AttendanceRecord.created_at.desc())
+        
+        # Paginate results
+        records_pagination = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        # Get filter options
+        departments = db.session.query(Student.department).filter(
+            Student.department.isnot(None)
+        ).distinct().all()
+        years = db.session.query(Student.year).filter(
+            Student.year.isnot(None)
+        ).distinct().all()
+        statuses = db.session.query(AttendanceRecord.status).distinct().all()
         
         return render_template('attendance_clean.html', 
-                             records=records,
+                             records=records_pagination.items,
+                             pagination=records_pagination,
                              departments=[d[0] for d in departments if d[0]],
                              years=[y[0] for y in years if y[0]],
+                             statuses=[s[0] for s in statuses if s[0]],
                              current_date=date_filter,
                              current_department=department_filter,
-                             current_year=year_filter)
+                             current_year=year_filter,
+                             current_status=status_filter,
+                             current_search=search,
+                             per_page=per_page)
     except Exception as e:
         logger.error(f"Error in attendance route: {str(e)}")
         flash('Error loading attendance records', 'error')
-        return render_template('attendance_clean.html', records=[])
+        return render_template('attendance_clean.html', records=[], pagination=None)
 
 @app.route('/mark_attendance')
 def mark_attendance():

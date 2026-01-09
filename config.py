@@ -54,6 +54,11 @@ class Config:
     # Export Configuration
     EXPORT_FOLDER = 'exports'
     
+    # Pagination Configuration
+    STUDENTS_PER_PAGE = 50
+    ATTENDANCE_PER_PAGE = 100
+    MAX_PER_PAGE = 500
+    
     @staticmethod
     def init_app(app):
         # Create necessary directories
