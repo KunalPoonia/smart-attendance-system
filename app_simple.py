@@ -27,7 +27,7 @@ except ImportError as e:
 
 # Simple configuration
 class SimpleConfig:
-    SECRET_KEY = 'dev-secret-key'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-fallback')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///attendance.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'static/uploads'

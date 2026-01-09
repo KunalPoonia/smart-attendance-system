@@ -12,7 +12,7 @@ import logging
 
 # Simple configuration
 class MinimalConfig:
-    SECRET_KEY = 'dev-secret-key-minimal'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-minimal-fallback')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///minimal_attendance.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'static/uploads'
