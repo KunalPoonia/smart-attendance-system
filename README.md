@@ -1,4 +1,4 @@
-# 🎓 Smart Attendance System
+# 🤖📋 Smart Attendance System
 
 An open‑source, production‑ready **Face Recognition–based Attendance System** built as a **B.Tech final/major project**. Designed to prevent proxy attendance, ensure accountability, and keep things clean, simple, and scalable.
 
@@ -6,25 +6,25 @@ An open‑source, production‑ready **Face Recognition–based Attendance Syste
 
 ---
 
-## 📌 Table of Contents
+## 📌 TABLE OF CONTENTS
 
-* Overview
-* Features
-* Tech Stack
-* Project Architecture
-* Installation
-* Usage
-* Configuration
-* Security & Privacy
-* Roadmap
-* Contributing
-* Code of Conduct
-* License
-* Authors & Credits
+*  Overview
+*  Features
+*  Tech Stack
+*  Project Architecture
+*  Installation
+*  Usage
+*  Configuration
+*  Security & Privacy
+*  Roadmap
+*  Contributing
+*  Code of Conduct
+*  License
+*  Authors & Credits
 
 ---
 
-## 🚀 Project Overview
+## 🚀 PROJECT OVERVIEW
 
 This system uses **computer vision + facial recognition** to automatically mark student attendance in real time. It replaces fragile manual systems and shuts the door on proxy attendance—for good.
 
@@ -36,40 +36,40 @@ Core goals:
 
 ---
 
-## ✨ Features
+## ✨ FEATURES
 
-* ✅ Student face registration
-* ✅ Real-time face recognition via webcam
-* ✅ Automatic attendance with timestamp
-* ✅ Proxy attendance prevention
-* ✅ Unknown face detection & alerts
-* ✅ Admin dashboard for teachers
-* ✅ CSV / Excel attendance export
-* ✅ Manual attendance fallback
+* 🎓 Student face registration 🆔
+* 📷 Real-time face recognition via webcam 🤖
+* ⏱️ Automatic attendance with timestamp 📝
+* 🚫 Proxy attendance prevention 👥
+* ⚠️ Unknown face detection & alerts 🕵️‍♂️
+* 🧑‍🏫 Admin dashboard for teachers 📊
+* 📊 CSV / Excel attendance export 📁
+* 📋 Manual attendance fallback ✍️
 
 ---
 
-## 🧠 Tech Stack
+## 🧠 TECH STACK
 
-**Backend**
+1. **Backend**
 
 * Python (Flask)
 * Flask‑SQLAlchemy
 
-**Computer Vision**
+2. **Computer Vision**
 
 * OpenCV
 * face_recognition (dlib)
 
-**Frontend**
+3. **Frontend**
 
 * HTML5 / CSS3 / JavaScript
 
-**Database**
+4. **Database**
 
 * SQLite (simple, reliable, portable)
 
-**Libraries**
+5. **Libraries**
 
 * NumPy
 * Pandas
@@ -77,7 +77,7 @@ Core goals:
 
 ---
 
-## 🏗️ Project Structure
+## 🏗️ PROJECT STRUCTURE
 
 ```
 smart_attendance_system/
@@ -105,28 +105,28 @@ smart_attendance_system/
 
 ---
 
-## ⚙️ Installation
+## ⚙️ INSTALLATION
 
-### Prerequisites
+### ⭐Prerequisites
 
 * Python **3.7+**
 * Webcam
 * 4GB RAM (minimum)
 
-### Clone Repository
+### ⭐Clone Repository
 
 ```bash
 git clone https://github.com/your-username/smart-attendance-system.git
 cd smart-attendance-system
 ```
 
-### Install Dependencies
+### ⭐Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run Application
+### ⭐Run Application
 
 ```bash
 python app.py
@@ -196,9 +196,9 @@ sudo apt-get install build-essential cmake libgtk-3-dev libboost-python-dev libx
 
 ---
 
-## 🧪 Usage
+## 🧪 USAGE
 
-### Automatic Mode
+### ⭐Automatic Mode
 
 1. Register students (clear photos only)
 2. Start camera
@@ -206,11 +206,11 @@ sudo apt-get install build-essential cmake libgtk-3-dev libboost-python-dev libx
 4. System auto-detects
 5. Attendance marked
 
-### Manual Mode
+### ⭐Manual Mode
 
-* Enter student ID
-* Mark attendance manually
-* Used as fallback
+1. Enter student ID
+2. Mark attendance manually
+3. Used as fallback
 
 ---
 
@@ -225,7 +225,7 @@ sudo apt-get install build-essential cmake libgtk-3-dev libboost-python-dev libx
 
 ---
 
-## 🛣️ Roadmap
+## 🛣️ ROADMAP
 
 * 🔄 Multi‑camera support
 * ☁️ Cloud database option
@@ -235,9 +235,9 @@ sudo apt-get install build-essential cmake libgtk-3-dev libboost-python-dev libx
 
 ---
 
-## 🤝 Contributing
+## 🤝 CONTRIBUTING
 
-We welcome contributors.
+⭐We welcome contributors.⭐
 
 ### How to Contribute
 
@@ -250,7 +250,7 @@ Read: `CONTRIBUTING.md`
 
 ---
 
-## 📜 Code of Conduct
+## 📜 CODE OF CONDUCT
 
 This project follows the **Contributor Covenant**.
 
@@ -262,7 +262,7 @@ Read: `CODE_OF_CONDUCT.md`
 
 ---
 
-## 🛡️ Security Policy
+## 🛡️ SECURITY POLICY
 
 If you find a vulnerability:
 
@@ -273,7 +273,7 @@ Read: `SECURITY.md`
 
 ---
 
-## 📄 License
+## 📄 LICENSE
 
 This project is licensed under the **MIT License**.
 
@@ -287,7 +287,7 @@ Just give credit where it’s due.
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 AUTHOR
 
 ## Kunal Poonia
 B.Tech – 2nd Year
@@ -295,7 +295,7 @@ Open‑source contributor & builder
 
 ---
 
-## 🌟 Final Note
+## 🌟 FINAL NOTE
 
 This repo isn’t just a project.
 
