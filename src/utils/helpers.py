@@ -85,9 +85,120 @@ def export_attendance_to_csv(records):
         return None
 
 def export_attendance_to_excel(records):
-    """Export attendance records to Excel (placeholder - returns CSV)"""
-    # For now, return CSV export as Excel export requires additional dependencies
-    return export_attendance_to_csv(records)
+    """Export attendance records to Excel with formatting"""
+    try:
+        # Try to import openpyxl
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+        except ImportError:
+            logging.warning("openpyxl not available, falling back to CSV export")
+            return export_attendance_to_csv(records)
+        
+        filename = f"attendance_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        filepath = os.path.join('exports', filename)
+        
+        os.makedirs('exports', exist_ok=True)
+        
+        # Create workbook and worksheet
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Attendance Records"
+        
+        # Define headers
+        headers = [
+            'Date', 'Student ID', 'Student Name', 'Time In', 'Status', 
+            'Department', 'Year', 'Section', 'Confidence', 'Marked By'
+        ]
+        
+        # Style definitions
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Write and style headers
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = border
+        
+        # Write data rows
+        for row_idx, record in enumerate(records, 2):
+            data = [
+                record.date.strftime('%Y-%m-%d') if record.date else '',
+                record.student.student_id if record.student else '',
+                record.student.name if record.student else '',
+                record.time_in.strftime('%H:%M:%S') if record.time_in else '',
+                record.status,
+                record.student.department if record.student else '',
+                record.student.year if record.student else '',
+                record.student.section if record.student else '',
+                f"{record.confidence_score:.2f}" if record.confidence_score else '',
+                getattr(record, 'marked_by', 'System')
+            ]
+            
+            for col, value in enumerate(data, 1):
+                cell = ws.cell(row=row_idx, column=col, value=value)
+                cell.border = border
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                
+                # Color code status
+                if col == 5:  # Status column
+                    if value == 'Present':
+                        cell.fill = PatternFill(start_color="D4EDDA", end_color="D4EDDA", fill_type="solid")
+                    elif value == 'Absent':
+                        cell.fill = PatternFill(start_color="F8D7DA", end_color="F8D7DA", fill_type="solid")
+                    elif value == 'Late':
+                        cell.fill = PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
+        
+        # Auto-adjust column widths
+        for col in range(1, len(headers) + 1):
+            column_letter = get_column_letter(col)
+            max_length = 0
+            
+            for row in ws[column_letter]:
+                try:
+                    if len(str(row.value)) > max_length:
+                        max_length = len(str(row.value))
+                except:
+                    pass
+            
+            adjusted_width = min(max_length + 2, 50)  # Cap at 50 characters
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Add summary at the bottom
+        summary_row = len(records) + 3
+        ws.cell(row=summary_row, column=1, value="Summary:").font = Font(bold=True)
+        
+        total_records = len(records)
+        present_count = len([r for r in records if r.status == 'Present'])
+        absent_count = len([r for r in records if r.status == 'Absent'])
+        late_count = len([r for r in records if r.status == 'Late'])
+        
+        ws.cell(row=summary_row + 1, column=1, value=f"Total Records: {total_records}")
+        ws.cell(row=summary_row + 2, column=1, value=f"Present: {present_count}")
+        ws.cell(row=summary_row + 3, column=1, value=f"Absent: {absent_count}")
+        ws.cell(row=summary_row + 4, column=1, value=f"Late: {late_count}")
+        
+        # Save workbook
+        wb.save(filepath)
+        
+        return filepath
+        
+    except Exception as e:
+        logging.error(f"Error exporting to Excel: {str(e)}")
+        # Fallback to CSV if Excel export fails
+        return export_attendance_to_csv(records)
 
 def generate_attendance_summary(records):
     """Generate attendance summary statistics"""
