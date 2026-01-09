@@ -1177,6 +1177,337 @@ def delete_attendance(record_id):
             'message': f'Error deleting record: {str(e)}'
         }), 500
 
+# ==================== ANALYTICS DASHBOARD ROUTES ====================
+
+@app.route('/analytics')
+def analytics():
+    """Advanced Analytics Dashboard"""
+    try:
+        today = date.today()
+        
+        # Get date range from query params (default: last 30 days)
+        days = int(request.args.get('days', 30))
+        date_from = today - timedelta(days=days)
+        
+        # Overview statistics
+        total_students = Student.query.filter_by(is_active=True).count()
+        today_records = AttendanceRecord.query.filter_by(date=today).all()
+        today_present = sum(1 for r in today_records if r.status == 'Present')
+        today_rate = round((today_present / total_students * 100), 1) if total_students > 0 else 0
+        
+        # Weekly average
+        week_start = today - timedelta(days=7)
+        week_records = AttendanceRecord.query.filter(
+            AttendanceRecord.date >= week_start,
+            AttendanceRecord.date <= today
+        ).all()
+        week_present = sum(1 for r in week_records if r.status == 'Present')
+        week_days = min(7, (today - week_start).days + 1)
+        week_avg = round((week_present / (total_students * week_days) * 100), 1) if total_students > 0 else 0
+        
+        # Monthly average
+        month_start = today - timedelta(days=30)
+        month_records = AttendanceRecord.query.filter(
+            AttendanceRecord.date >= month_start,
+            AttendanceRecord.date <= today
+        ).all()
+        month_present = sum(1 for r in month_records if r.status == 'Present')
+        month_days = 30
+        month_avg = round((month_present / (total_students * month_days) * 100), 1) if total_students > 0 else 0
+        
+        # Students on leave today
+        on_leave_today = LeaveRequest.query.filter(
+            LeaveRequest.status == 'Approved',
+            LeaveRequest.start_date <= today,
+            LeaveRequest.end_date >= today
+        ).count()
+        
+        # Pending leave requests
+        pending_leaves = LeaveRequest.query.filter_by(status='Pending').count()
+        
+        return render_template('analytics.html',
+                             total_students=total_students,
+                             today_rate=today_rate,
+                             week_avg=week_avg,
+                             month_avg=month_avg,
+                             on_leave_today=on_leave_today,
+                             pending_leaves=pending_leaves,
+                             days=days)
+    except Exception as e:
+        logger.error(f"Error in analytics route: {str(e)}")
+        flash('Error loading analytics', 'error')
+        return render_template('analytics.html',
+                             total_students=0,
+                             today_rate=0,
+                             week_avg=0,
+                             month_avg=0,
+                             on_leave_today=0,
+                             pending_leaves=0,
+                             days=30)
+
+@app.route('/api/analytics/trend')
+def analytics_trend():
+    """Get attendance trend data for charts"""
+    try:
+        days = int(request.args.get('days', 30))
+        today = date.today()
+        
+        trend_data = []
+        total_students = Student.query.filter_by(is_active=True).count()
+        
+        for i in range(days - 1, -1, -1):
+            current_date = today - timedelta(days=i)
+            records = AttendanceRecord.query.filter_by(date=current_date).all()
+            
+            present = sum(1 for r in records if r.status == 'Present')
+            absent = sum(1 for r in records if r.status == 'Absent')
+            late = sum(1 for r in records if r.status == 'Late')
+            on_leave = sum(1 for r in records if r.status == 'On Leave')
+            
+            rate = round((present / total_students * 100), 1) if total_students > 0 else 0
+            
+            trend_data.append({
+                'date': current_date.strftime('%Y-%m-%d'),
+                'label': current_date.strftime('%b %d'),
+                'present': present,
+                'absent': absent,
+                'late': late,
+                'on_leave': on_leave,
+                'rate': rate
+            })
+        
+        return jsonify({'trend': trend_data, 'total_students': total_students})
+    except Exception as e:
+        logger.error(f"Error getting trend data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/department')
+def analytics_department():
+    """Get department-wise attendance statistics"""
+    try:
+        days = int(request.args.get('days', 30))
+        today = date.today()
+        date_from = today - timedelta(days=days)
+        
+        # Get all departments
+        departments = db.session.query(Student.department).filter(
+            Student.is_active == True,
+            Student.department != None
+        ).distinct().all()
+        
+        dept_data = []
+        for (dept,) in departments:
+            if not dept:
+                continue
+                
+            # Get students in department
+            dept_students = Student.query.filter_by(department=dept, is_active=True).all()
+            student_ids = [s.id for s in dept_students]
+            
+            if not student_ids:
+                continue
+            
+            # Get attendance records
+            records = AttendanceRecord.query.filter(
+                AttendanceRecord.student_id.in_(student_ids),
+                AttendanceRecord.date >= date_from,
+                AttendanceRecord.date <= today
+            ).all()
+            
+            present = sum(1 for r in records if r.status == 'Present')
+            total_possible = len(student_ids) * days
+            rate = round((present / total_possible * 100), 1) if total_possible > 0 else 0
+            
+            dept_data.append({
+                'department': dept,
+                'students': len(student_ids),
+                'present': present,
+                'rate': rate
+            })
+        
+        # Sort by rate descending
+        dept_data.sort(key=lambda x: x['rate'], reverse=True)
+        
+        return jsonify({'departments': dept_data})
+    except Exception as e:
+        logger.error(f"Error getting department data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/status_distribution')
+def analytics_status_distribution():
+    """Get attendance status distribution"""
+    try:
+        days = int(request.args.get('days', 30))
+        today = date.today()
+        date_from = today - timedelta(days=days)
+        
+        records = AttendanceRecord.query.filter(
+            AttendanceRecord.date >= date_from,
+            AttendanceRecord.date <= today
+        ).all()
+        
+        distribution = {
+            'Present': 0,
+            'Absent': 0,
+            'Late': 0,
+            'On Leave': 0
+        }
+        
+        for record in records:
+            status = record.status if record.status in distribution else 'Absent'
+            distribution[status] += 1
+        
+        return jsonify({'distribution': distribution})
+    except Exception as e:
+        logger.error(f"Error getting status distribution: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/top_students')
+def analytics_top_students():
+    """Get top performing students by attendance"""
+    try:
+        days = int(request.args.get('days', 30))
+        limit = int(request.args.get('limit', 10))
+        today = date.today()
+        date_from = today - timedelta(days=days)
+        
+        students = Student.query.filter_by(is_active=True).all()
+        
+        student_stats = []
+        for student in students:
+            records = AttendanceRecord.query.filter(
+                AttendanceRecord.student_id == student.id,
+                AttendanceRecord.date >= date_from,
+                AttendanceRecord.date <= today
+            ).all()
+            
+            present = sum(1 for r in records if r.status == 'Present')
+            rate = round((present / days * 100), 1) if days > 0 else 0
+            
+            student_stats.append({
+                'id': student.id,
+                'name': student.name,
+                'student_id': student.student_id,
+                'department': student.department,
+                'present_days': present,
+                'rate': rate
+            })
+        
+        # Sort by rate descending and get top
+        student_stats.sort(key=lambda x: x['rate'], reverse=True)
+        top_students = student_stats[:limit]
+        
+        return jsonify({'top_students': top_students})
+    except Exception as e:
+        logger.error(f"Error getting top students: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/at_risk')
+def analytics_at_risk():
+    """Get students with low attendance (at risk)"""
+    try:
+        days = int(request.args.get('days', 30))
+        threshold = float(request.args.get('threshold', 75))
+        limit = int(request.args.get('limit', 10))
+        today = date.today()
+        date_from = today - timedelta(days=days)
+        
+        students = Student.query.filter_by(is_active=True).all()
+        
+        at_risk = []
+        for student in students:
+            records = AttendanceRecord.query.filter(
+                AttendanceRecord.student_id == student.id,
+                AttendanceRecord.date >= date_from,
+                AttendanceRecord.date <= today
+            ).all()
+            
+            present = sum(1 for r in records if r.status == 'Present')
+            rate = round((present / days * 100), 1) if days > 0 else 0
+            
+            if rate < threshold:
+                at_risk.append({
+                    'id': student.id,
+                    'name': student.name,
+                    'student_id': student.student_id,
+                    'department': student.department,
+                    'present_days': present,
+                    'rate': rate
+                })
+        
+        # Sort by rate ascending (worst first)
+        at_risk.sort(key=lambda x: x['rate'])
+        
+        return jsonify({'at_risk': at_risk[:limit], 'threshold': threshold})
+    except Exception as e:
+        logger.error(f"Error getting at-risk students: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/weekly_heatmap')
+def analytics_weekly_heatmap():
+    """Get weekly attendance heatmap data"""
+    try:
+        weeks = int(request.args.get('weeks', 4))
+        today = date.today()
+        total_students = Student.query.filter_by(is_active=True).count()
+        
+        heatmap_data = []
+        
+        for week in range(weeks - 1, -1, -1):
+            week_start = today - timedelta(days=today.weekday() + (week * 7))
+            week_data = {'week': f'Week {weeks - week}', 'days': []}
+            
+            for day in range(7):
+                current_date = week_start + timedelta(days=day)
+                if current_date > today:
+                    week_data['days'].append({'day': current_date.strftime('%a'), 'rate': None})
+                    continue
+                
+                records = AttendanceRecord.query.filter_by(date=current_date).all()
+                present = sum(1 for r in records if r.status == 'Present')
+                rate = round((present / total_students * 100), 1) if total_students > 0 else 0
+                
+                week_data['days'].append({
+                    'day': current_date.strftime('%a'),
+                    'date': current_date.strftime('%Y-%m-%d'),
+                    'rate': rate
+                })
+            
+            heatmap_data.append(week_data)
+        
+        return jsonify({'heatmap': heatmap_data})
+    except Exception as e:
+        logger.error(f"Error getting heatmap data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/analytics/recent_activity')
+def analytics_recent_activity():
+    """Get recent attendance activity"""
+    try:
+        limit = int(request.args.get('limit', 20))
+        
+        records = AttendanceRecord.query.order_by(
+            AttendanceRecord.created_at.desc()
+        ).limit(limit).all()
+        
+        activity = []
+        for record in records:
+            activity.append({
+                'student_name': record.student.name if record.student else 'Unknown',
+                'student_id': record.student.student_id if record.student else 'N/A',
+                'status': record.status,
+                'date': record.date.strftime('%Y-%m-%d'),
+                'time': record.time_in.strftime('%H:%M:%S') if record.time_in else 'N/A',
+                'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S') if record.created_at else 'N/A'
+            })
+        
+        return jsonify({'activity': activity})
+    except Exception as e:
+        logger.error(f"Error getting recent activity: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== END ANALYTICS DASHBOARD ROUTES ====================
+
 if __name__ == '__main__':
     try:
         app.run(debug=True, host='0.0.0.0', port=5000)

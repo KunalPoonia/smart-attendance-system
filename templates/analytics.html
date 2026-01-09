@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - Smart Attendance System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0;
+    }
+    
+    .filter-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .filter-controls select {
+        padding: 8px 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    
+    .stat-card.primary { border-left: 4px solid #4361ee; }
+    .stat-card.success { border-left: 4px solid #2ec4b6; }
+    .stat-card.warning { border-left: 4px solid #ff9f1c; }
+    .stat-card.info { border-left: 4px solid #7209b7; }
+    .stat-card.danger { border-left: 4px solid #e63946; }
+    
+    .stat-label {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    
+    .stat-value.primary { color: #4361ee; }
+    .stat-value.success { color: #2ec4b6; }
+    .stat-value.warning { color: #ff9f1c; }
+    .stat-value.info { color: #7209b7; }
+    .stat-value.danger { color: #e63946; }
+    
+    .stat-suffix {
+        font-size: 16px;
+        font-weight: 400;
+        color: #888;
+    }
+    
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .chart-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .table-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .data-table th {
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .data-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .rate-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .rate-badge.excellent { background: #d4edda; color: #155724; }
+    .rate-badge.good { background: #cce5ff; color: #004085; }
+    .rate-badge.warning { background: #fff3cd; color: #856404; }
+    .rate-badge.danger { background: #f8d7da; color: #721c24; }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-size: 14px;
+    }
+    
+    .activity-icon.present { background: #d4edda; color: #155724; }
+    .activity-icon.absent { background: #f8d7da; color: #721c24; }
+    .activity-icon.late { background: #fff3cd; color: #856404; }
+    .activity-icon.leave { background: #cce5ff; color: #004085; }
+    
+    .activity-details {
+        flex: 1;
+    }
+    
+    .activity-name {
+        font-weight: 500;
+        color: #1a1a2e;
+    }
+    
+    .activity-meta {
+        font-size: 12px;
+        color: #888;
+    }
+    
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+        color: #888;
+    }
+    
+    .heatmap-container {
+        overflow-x: auto;
+    }
+    
+    .heatmap-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .heatmap-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .heatmap-label {
+        width: 60px;
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .heatmap-cell {
+        width: 40px;
+        height: 30px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: white;
+        font-weight: 500;
+    }
+    
+    .heatmap-cell.level-0 { background: #ebedf0; color: #666; }
+    .heatmap-cell.level-1 { background: #9be9a8; }
+    .heatmap-cell.level-2 { background: #40c463; }
+    .heatmap-cell.level-3 { background: #30a14e; }
+    .heatmap-cell.level-4 { background: #216e39; }
+    
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .tables-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="page-header">
+        <h1 class="page-title">Analytics Dashboard</h1>
+        <div class="filter-controls">
+            <select id="dateRange" onchange="updateDateRange()">
+                <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 Days</option>
+                <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 Days</option>
+                <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 Days</option>
+            </select>
+            <button class="btn btn-outline" onclick="exportData()">Export</button>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value primary">{{ total_students }}</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-label">Today's Rate</div>
+            <div class="stat-value success">{{ today_rate }}<span class="stat-suffix">%</span></div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-label">Weekly Average</div>
+            <div class="stat-value info">{{ week_avg }}<span class="stat-suffix">%</span></div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-label">Monthly Average</div>
+            <div class="stat-value warning">{{ month_avg }}<span class="stat-suffix">%</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">On Leave Today</div>
+            <div class="stat-value">{{ on_leave_today }}</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-label">Pending Leaves</div>
+            <div class="stat-value danger">{{ pending_leaves }}</div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">Attendance Trend</div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Status Distribution</div>
+            <div class="chart-container">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Department Chart -->
+    <div class="chart-card" style="margin-bottom: 24px;">
+        <div class="chart-title">Department-wise Attendance</div>
+        <div class="chart-container">
+            <canvas id="departmentChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Tables Row -->
+    <div class="tables-grid">
+        <div class="table-card">
+            <div class="table-title">
+                <span>Top Performers</span>
+                <span class="rate-badge excellent">Best Attendance</span>
+            </div>
+            <table class="data-table" id="topStudentsTable">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Department</th>
+                        <th>Days Present</th>
+                        <th>Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4" class="loading-spinner">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="table-card">
+            <div class="table-title">
+                <span>At-Risk Students</span>
+                <span class="rate-badge danger">Below 75%</span>
+            </div>
+            <table class="data-table" id="atRiskTable">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Department</th>
+                        <th>Days Present</th>
+                        <th>Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4" class="loading-spinner">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Activity Feed -->
+    <div class="chart-card">
+        <div class="chart-title">Recent Activity</div>
+        <div id="activityFeed">
+            <div class="loading-spinner">Loading...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let trendChart, distributionChart, departmentChart;
+let currentDays = {{ days }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllData();
+});
+
+function updateDateRange() {
+    currentDays = document.getElementById('dateRange').value;
+    window.location.href = `/analytics?days=${currentDays}`;
+}
+
+function loadAllData() {
+    loadTrendData();
+    loadDistributionData();
+    loadDepartmentData();
+    loadTopStudents();
+    loadAtRiskStudents();
+    loadRecentActivity();
+}
+
+function loadTrendData() {
+    fetch(`/api/analytics/trend?days=${currentDays}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (trendChart) trendChart.destroy();
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.trend.map(d => d.label),
+                    datasets: [{
+                        label: 'Attendance Rate (%)',
+                        data: data.trend.map(d => d.rate),
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => value + '%' }
+                        }
+                    }
+                }
+            });
+        });
+}
+
+function loadDistributionData() {
+    fetch(`/api/analytics/status_distribution?days=${currentDays}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            
+            if (distributionChart) distributionChart.destroy();
+            
+            const dist = data.distribution;
+            distributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present', 'Absent', 'Late', 'On Leave'],
+                    datasets: [{
+                        data: [dist.Present, dist.Absent, dist.Late, dist['On Leave']],
+                        backgroundColor: ['#2ec4b6', '#e63946', '#ff9f1c', '#4361ee']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        });
+}
+
+function loadDepartmentData() {
+    fetch(`/api/analytics/department?days=${currentDays}`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('departmentChart').getContext('2d');
+            
+            if (departmentChart) departmentChart.destroy();
+            
+            departmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.departments.map(d => d.department),
+                    datasets: [{
+                        label: 'Attendance Rate (%)',
+                        data: data.departments.map(d => d.rate),
+                        backgroundColor: data.departments.map(d => 
+                            d.rate >= 90 ? '#2ec4b6' : 
+                            d.rate >= 75 ? '#4361ee' : 
+                            d.rate >= 60 ? '#ff9f1c' : '#e63946'
+                        )
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => value + '%' }
+                        }
+                    }
+                }
+            });
+        });
+}
+
+function loadTopStudents() {
+    fetch(`/api/analytics/top_students?days=${currentDays}&limit=5`)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#topStudentsTable tbody');
+            
+            if (data.top_students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">No data available</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.top_students.map(s => `
+                <tr>
+                    <td><strong>${s.name}</strong><br><small>${s.student_id}</small></td>
+                    <td>${s.department || 'N/A'}</td>
+                    <td>${s.present_days}</td>
+                    <td><span class="rate-badge ${getRateBadgeClass(s.rate)}">${s.rate}%</span></td>
+                </tr>
+            `).join('');
+        });
+}
+
+function loadAtRiskStudents() {
+    fetch(`/api/analytics/at_risk?days=${currentDays}&limit=5`)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#atRiskTable tbody');
+            
+            if (data.at_risk.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">No at-risk students</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.at_risk.map(s => `
+                <tr>
+                    <td><strong>${s.name}</strong><br><small>${s.student_id}</small></td>
+                    <td>${s.department || 'N/A'}</td>
+                    <td>${s.present_days}</td>
+                    <td><span class="rate-badge ${getRateBadgeClass(s.rate)}">${s.rate}%</span></td>
+                </tr>
+            `).join('');
+        });
+}
+
+function loadRecentActivity() {
+    fetch('/api/analytics/recent_activity?limit=10')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('activityFeed');
+            
+            if (data.activity.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">No recent activity</div>';
+                return;
+            }
+            
+            container.innerHTML = data.activity.map(a => `
+                <div class="activity-item">
+                    <div class="activity-icon ${getStatusClass(a.status)}">${getStatusIcon(a.status)}</div>
+                    <div class="activity-details">
+                        <div class="activity-name">${a.student_name}</div>
+                        <div class="activity-meta">${a.status} - ${a.date} at ${a.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        });
+}
+
+function getRateBadgeClass(rate) {
+    if (rate >= 90) return 'excellent';
+    if (rate >= 75) return 'good';
+    if (rate >= 60) return 'warning';
+    return 'danger';
+}
+
+function getStatusClass(status) {
+    switch(status.toLowerCase()) {
+        case 'present': return 'present';
+        case 'absent': return 'absent';
+        case 'late': return 'late';
+        case 'on leave': return 'leave';
+        default: return 'present';
+    }
+}
+
+function getStatusIcon(status) {
+    switch(status.toLowerCase()) {
+        case 'present': return '✓';
+        case 'absent': return '✗';
+        case 'late': return '⏰';
+        case 'on leave': return '📋';
+        default: return '•';
+    }
+}
+
+function exportData() {
+    window.location.href = `/export_attendance?date_from=${getDateFrom()}&date_to=${getDateTo()}&format=excel`;
+}
+
+function getDateFrom() {
+    const today = new Date();
+    today.setDate(today.getDate() - currentDays);
+    return today.toISOString().split('T')[0];
+}
+
+function getDateTo() {
+    return new Date().toISOString().split('T')[0];
+}
+</script>
+{% endblock %}
