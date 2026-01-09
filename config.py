@@ -54,6 +54,11 @@ class Config:
     # Export Configuration
     EXPORT_FOLDER = 'exports'
     
+    # Rate Limiting Configuration
+    RATELIMIT_STORAGE_URL = 'memory://'
+    RATELIMIT_STRATEGY = 'fixed-window'
+    RATELIMIT_DEFAULT = '200 per day, 50 per hour'
+    
     @staticmethod
     def init_app(app):
         # Create necessary directories

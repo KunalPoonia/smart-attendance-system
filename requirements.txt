@@ -8,4 +8,4 @@ gunicorn==21.2.0
 python-dotenv==1.0.0
 Werkzeug>=2.3.7
 SQLAlchemy>=2.0.0
-bleach>=6.0.0
+Flask-Limiter>=3.5.0

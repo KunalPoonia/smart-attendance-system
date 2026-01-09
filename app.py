@@ -9,6 +9,16 @@ import threading
 import time
 import logging
 
+# Try to import Flask-Limiter for rate limiting
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    LIMITER_AVAILABLE = True
+except ImportError:
+    LIMITER_AVAILABLE = False
+    Limiter = None
+    get_remote_address = None
+
 # Try to import cv2 with error handling
 try:
     import cv2
@@ -50,6 +60,46 @@ app.config.from_object(Config)
 
 # Initialize database
 db.init_app(app)
+
+# Initialize rate limiter
+if LIMITER_AVAILABLE:
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://",
+        strategy="fixed-window"
+    )
+    logger.info("Rate limiter initialized")
+else:
+    limiter = None
+    logger.warning("Flask-Limiter not available - rate limiting disabled")
+
+# Rate limiting decorator helper
+def rate_limit(limit_string):
+    """Helper decorator for rate limiting that works even when limiter is not available"""
+    def decorator(f):
+        if LIMITER_AVAILABLE and limiter:
+            return limiter.limit(limit_string)(f)
+        else:
+            return f
+    return decorator
+
+# Rate limit error handler
+if LIMITER_AVAILABLE:
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        """Handle rate limit exceeded errors"""
+        if request.is_json or request.path.startswith('/api/'):
+            return jsonify({
+                'success': False,
+                'error': 'Rate limit exceeded',
+                'message': f'Too many requests. {e.description}',
+                'retry_after': getattr(e, 'retry_after', None)
+            }), 429
+        else:
+            flash(f'Too many requests. Please wait before trying again. {e.description}', 'warning')
+            return redirect(request.referrer or url_for('index'))
 
 # Swagger UI Configuration
 SWAGGER_URL = '/api/docs'
@@ -138,6 +188,7 @@ def students():
         return render_template('students_clean.html', students=[])
 
 @app.route('/register_student', methods=['GET', 'POST'])
+@rate_limit("10 per minute")
 def register_student():
     """Register new student"""
     if request.method == 'GET':
@@ -284,6 +335,7 @@ def mark_attendance():
     return render_template('mark_attendance_clean.html')
 
 @app.route('/start_detection', methods=['POST'])
+@rate_limit("10 per minute")
 def start_detection():
     """Start camera detection"""
     global simple_camera, detection_active
@@ -305,6 +357,7 @@ def start_detection():
         return jsonify({'success': False, 'message': f'Camera error: {str(e)}'})
 
 @app.route('/start_face_recognition', methods=['POST'])
+@rate_limit("10 per minute")
 def start_face_recognition():
     """Start face recognition detection"""
     global face_detector, face_recognition_active
@@ -450,6 +503,7 @@ def get_detected_faces():
         return jsonify({'faces': []})
 
 @app.route('/mark_manual_attendance', methods=['POST'])
+@rate_limit("30 per minute")
 def mark_manual_attendance():
     """Mark attendance manually using student ID"""
     try:
@@ -562,6 +616,7 @@ def mark_student_present():
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/auto_mark_attendance', methods=['POST'])
+@rate_limit("60 per minute")
 def auto_mark_attendance():
     """Automatically mark attendance for detected faces"""
     try:
@@ -747,6 +802,7 @@ def leave_management():
                              date_to='')
 
 @app.route('/apply_leave', methods=['POST'])
+@rate_limit("5 per minute")
 def apply_leave():
     """Apply for leave"""
     try:
@@ -805,6 +861,7 @@ def apply_leave():
     return redirect(url_for('leave_management'))
 
 @app.route('/review_leave', methods=['POST'])
+@rate_limit("20 per minute")
 def review_leave():
     """Review (approve/reject) a leave request"""
     try:
@@ -986,6 +1043,7 @@ def face_recognition_status():
     })
 
 @app.route('/delete_student/<int:student_id>', methods=['POST'])
+@rate_limit("5 per minute")
 def delete_student(student_id):
     """Delete a student (soft delete)"""
     try:
@@ -1045,6 +1103,7 @@ def permanently_delete_student(student_id):
         }), 500
 
 @app.route('/update_attendance_status', methods=['POST'])
+@rate_limit("30 per minute")
 def update_attendance_status():
     """Update attendance status for a student"""
     try:
