@@ -111,6 +111,13 @@ def csrf_exempt(f):
     else:
         return f
 
+# Rate limit dummy helper
+def rate_limit(limit_value):
+    """Dummy decorator for rate limiting"""
+    def decorator(f):
+        return f
+    return decorator
+
 # Swagger UI Configuration
 SWAGGER_URL = '/api/docs'
 API_URL = '/static/swagger.yaml'

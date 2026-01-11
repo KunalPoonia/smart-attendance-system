@@ -1,119 +1,325 @@
 {% extends "base_clean.html" %}
 
+{% block extra_css %}
+<style>
+    /* Full Screen Hero Slider */
+    .hero-slider-wrapper {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        /* Full viewport height */
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        overflow: hidden;
+        background: #0f172a;
+    }
+
+    .hero-slide {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0;
+        transform: scale(1);
+        transition: opacity 2s ease-in-out;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hero-slide.active {
+        opacity: 1;
+        z-index: 2;
+        animation: kenBurns 20s ease-out forwards;
+    }
+
+    @keyframes kenBurns {
+        0% {
+            transform: scale(1);
+        }
+
+        100% {
+            transform: scale(1.15);
+        }
+    }
+
+    .hero-slider-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.6) 80%, #0f172a 100%);
+        z-index: 3;
+    }
+
+    /* Hero Text Content */
+    .hero-content-wrapper {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        color: white;
+        max-width: 900px;
+        padding: 0 20px;
+        margin-top: -100px;
+        /* Optical center adjustment */
+    }
+
+    .hero-title-large {
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.02em;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease 0.5s;
+    }
+
+    .hero-desc-large {
+        font-size: 1.25rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease 0.7s;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-slide.active .hero-title-large,
+    .hero-slide.active .hero-desc-large,
+    .hero-slide.active .hero-btn-wrapper {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .hero-btn-wrapper {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease 0.9s;
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+    }
+
+    .btn-hero {
+        padding: 14px 36px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-hero-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-hero-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-hero-glass {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .btn-hero-glass:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
+    /* Floating Card (Overlapping Section) */
+    .hero-bottom-card {
+        position: relative;
+        z-index: 20;
+        margin-top: -120px;
+        /* Negative margin to create overlap */
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border);
+        margin-bottom: 60px;
+        text-align: center;
+    }
+
+    .quick-stats-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 32px;
+    }
+
+    .quick-stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .quick-stat-val {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .quick-stat-lbl {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-title-large {
+            font-size: 2.5rem;
+        }
+
+        .hero-slider-wrapper {
+            height: 100vh;
+        }
+
+        .hero-bottom-card {
+            padding: 24px;
+            margin-top: -80px;
+        }
+
+        .quick-stats-row {
+            gap: 24px;
+        }
+
+        .hero-btn-wrapper {
+            flex-direction: column;
+        }
+
+        .btn-hero {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block title %}Dashboard - Smart Attendance System{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Hero Section with Grid Background -->
-    <div class="hero">
-        <!-- Grid Background -->
-        <div class="hero-grid"></div>
-        
-        <!-- Animated Dots -->
-        <div class="hero-dots" id="hero-dots"></div>
-        
-        <!-- Content -->
-        <div class="hero-content">
-            <div class="hero-badge">
-                <i class="fas fa-bolt"></i>
-                AI-Powered Face Recognition
-            </div>
-            
-            <h1 class="hero-title">
-                Smart <span class="hero-title-blue">Attendance</span> System
-            </h1>
-            
-            <p class="hero-subtitle">
-                Transform your attendance tracking with cutting-edge AI face recognition. 
-                Fast, accurate, and completely effortless.
-            </p>
-            
-            <div class="hero-actions">
-                <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary btn-xl">
-                    <i class="fas fa-camera"></i>
-                    Mark Attendance
-                </a>
-                <a href="{{ url_for('register_student') }}" class="btn btn-secondary btn-xl">
-                    <i class="fas fa-user-plus"></i>
-                    Add Student
-                </a>
-            </div>
-            
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <div class="hero-stat-value">{{ total_students }}</div>
-                    <div class="hero-stat-label">Total Students</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value">{{ today_attendance }}</div>
-                    <div class="hero-stat-label">Present Today</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value">{% if total_students > 0 %}{{ ((today_attendance / total_students) * 100)|round(0)|int }}%{% else %}0%{% endif %}</div>
-                    <div class="hero-stat-label">Attendance Rate</div>
-                </div>
+<!-- Full Screen Hero Slider -->
+<div class="hero-slider-wrapper" id="heroSlider">
+    <!-- Slide 1 -->
+    <div class="hero-slide active"
+        style="background-image: url('{{ url_for('static', filename='images/hero_slider/hero_students_campus_1768157008715.png') }}');">
+        <div class="hero-slider-overlay"></div>
+        <div class="hero-content-wrapper">
+            <h1 class="hero-title-large">Smart Attendance System</h1>
+            <p class="hero-desc-large">Experience the future of campus management with automated, AI-powered attendance
+                tracking.</p>
+            <div class="hero-btn-wrapper">
+                <a href="#quick-actions" class="btn-hero btn-hero-primary">Get Started <i
+                        class="fas fa-arrow-right"></i></a>
+                <a href="{{ url_for('students') }}" class="btn-hero btn-hero-glass">View Students</a>
             </div>
         </div>
     </div>
 
-    <!-- Today's Progress -->
-    {% if total_students > 0 %}
-    <div class="card slide-up mb-6">
-        <div class="card-body">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-medium">Today's Progress</span>
-                <span class="badge badge-{{ 'success' if (today_attendance / total_students * 100) >= 75 else ('warning' if (today_attendance / total_students * 100) >= 50 else 'danger') }}">
-                    {{ ((today_attendance / total_students) * 100)|round(1) }}% Complete
-                </span>
-            </div>
-            <div class="progress" style="height: 8px;">
-                <div class="progress-bar primary" style="width: {{ (today_attendance / total_students * 100) }}%;"></div>
-            </div>
-            <div class="flex justify-between mt-2" style="font-size: 12px; color: var(--text-muted);">
-                <span><i class="fas fa-check-circle text-success"></i> {{ today_attendance }} marked</span>
-                <span><i class="fas fa-clock text-warning"></i> {{ total_students - today_attendance }} remaining</span>
+    <!-- Slide 2 -->
+    <div class="hero-slide"
+        style="background-image: url('{{ url_for('static', filename='images/hero_slider/hero_tech_office_1768156977985.png') }}');">
+        <div class="hero-slider-overlay"></div>
+        <div class="hero-content-wrapper">
+            <h1 class="hero-title-large">Face Recognition Tech</h1>
+            <p class="hero-desc-large">Secure, contactless, and 100% accurate. Biometric verification made simple for
+                everyone.</p>
+            <div class="hero-btn-wrapper">
+                <a href="{{ url_for('mark_attendance') }}" class="btn-hero btn-hero-primary">Try Demo <i
+                        class="fas fa-camera"></i></a>
             </div>
         </div>
     </div>
-    {% endif %}
-    
-    <!-- Feature Cards -->
+</div>
+
+<!-- Overlapping Bottom Card (Search/Stats Style) -->
+<div class="container" id="quick-actions">
+    <div class="hero-bottom-card slide-up">
+        <div class="quick-stats-row">
+            <div class="quick-stat-item">
+                <span class="quick-stat-val">{{ total_students }}</span>
+                <span class="quick-stat-lbl">Total Students</span>
+            </div>
+
+            <div style="width: 1px; height: 50px; background: var(--border);"></div>
+
+            <div class="quick-stat-item">
+                <span class="quick-stat-val">{{ today_attendance }}</span>
+                <span class="quick-stat-lbl">Present Today</span>
+            </div>
+
+            <div style="width: 1px; height: 50px; background: var(--border);"></div>
+
+            <div class="quick-stat-item">
+                <span class="quick-stat-val">{% if total_students > 0 %}{{ ((today_attendance / total_students) *
+                    100)|round(0)|int }}%{% else %}0%{% endif %}</span>
+                <span class="quick-stat-lbl">Attendance Rate</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+            <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-camera"></i> Mark Attendance Now
+            </a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <h3 class="font-bold text-center mb-6" style="font-size: 1.5rem;">Quick Access</h3>
     <div class="feature-grid">
-        <a href="{{ url_for('mark_attendance') }}" class="feature-card slide-up stagger-1">
-            <div class="feature-icon"><i class="fas fa-camera"></i></div>
-            <div class="feature-title">Face Recognition</div>
-            <div class="feature-desc">Mark attendance instantly using AI-powered face detection technology</div>
+        <a href="{{ url_for('register_student') }}" class="feature-card slide-up stagger-1">
+            <div class="feature-icon"><i class="fas fa-user-plus"></i></div>
+            <div class="feature-title">New Student</div>
+            <div class="feature-desc">Register a new student and enroll their face data</div>
         </a>
-        
+
         <a href="{{ url_for('students') }}" class="feature-card slide-up stagger-2">
             <div class="feature-icon"><i class="fas fa-users"></i></div>
-            <div class="feature-title">Manage Students</div>
-            <div class="feature-desc">View, add, edit and manage all student records in one place</div>
+            <div class="feature-title">Student List</div>
+            <div class="feature-desc">Manage enrolled students and view their profiles</div>
         </a>
-        
+
         <a href="{{ url_for('attendance') }}" class="feature-card slide-up stagger-3">
             <div class="feature-icon"><i class="fas fa-clipboard-list"></i></div>
             <div class="feature-title">Attendance Records</div>
             <div class="feature-desc">View complete attendance history with filters and export options</div>
         </a>
-        
+
         <a href="{{ url_for('leave_management') }}" class="feature-card slide-up stagger-4">
             <div class="feature-icon"><i class="fas fa-calendar-minus"></i></div>
             <div class="feature-title">Leave Management</div>
             <div class="feature-desc">Handle student leave requests with approval workflow</div>
         </a>
-        
-        <a href="{{ url_for('reports') }}" class="feature-card slide-up stagger-5">
-            <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
-            <div class="feature-title">Reports & Analytics</div>
-            <div class="feature-desc">Generate detailed reports and visualize attendance trends</div>
-        </a>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Recent Activity Section -->
     <div class="card mt-8 slide-up">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-history text-primary" style="margin-right: 8px;"></i>Recent Activity</h3>
+            <h3 class="card-title"><i class="fas fa-history text-primary" style="margin-right: 8px;"></i>Recent Activity
+            </h3>
             <a href="{{ url_for('attendance') }}" class="btn btn-secondary btn-sm">View All</a>
         </div>
         {% if recent_records and recent_records|length > 0 %}
@@ -121,18 +327,21 @@
             <ul class="activity-list">
                 {% for record in recent_records[:5] %}
                 <li class="activity-item">
-                    <div class="activity-icon {{ 'success' if record.status == 'Present' else ('warning' if record.status == 'Late' else 'danger') }}">
-                        <i class="fas fa-{{ 'check' if record.status == 'Present' else ('clock' if record.status == 'Late' else 'times') }}"></i>
+                    <div
+                        class="activity-icon {{ 'success' if record.status == 'Present' else ('warning' if record.status == 'Late' else 'danger') }}">
+                        <i
+                            class="fas fa-{{ 'check' if record.status == 'Present' else ('clock' if record.status == 'Late' else 'times') }}"></i>
                     </div>
                     <div class="activity-content">
                         <div class="activity-title">{{ record.student.name }}</div>
                         <div class="activity-meta">
-                            {{ record.student.student_id }} 
+                            {{ record.student.student_id }}
                             {% if record.student.department %}&bull; {{ record.student.department }}{% endif %}
                             &bull; {{ record.time_in.strftime('%H:%M') if record.time_in else 'N/A' }}
                         </div>
                     </div>
-                    <span class="badge badge-{{ 'success' if record.status == 'Present' else ('warning' if record.status == 'Late' else 'danger') }}">
+                    <span
+                        class="badge badge-{{ 'success' if record.status == 'Present' else ('warning' if record.status == 'Late' else 'danger') }}">
                         {{ record.status }}
                     </span>
                 </li>
@@ -145,7 +354,8 @@
                 <div class="empty-state-icon"><i class="fas fa-clipboard-list"></i></div>
                 <div class="empty-state-title">No recent activity</div>
                 <div class="empty-state-text">Start marking attendance to see activity here.</div>
-                <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary"><i class="fas fa-camera"></i> Mark Attendance</a>
+                <a href="{{ url_for('mark_attendance') }}" class="btn btn-primary"><i class="fas fa-camera"></i> Mark
+                    Attendance</a>
             </div>
         </div>
         {% endif %}
@@ -155,36 +365,24 @@
 
 {% block extra_js %}
 <script>
-// Create animated dots on grid intersections
-(function() {
-    const container = document.getElementById('hero-dots');
-    if (!container) return;
-    
-    const gridSize = 60;
-    const containerRect = container.getBoundingClientRect();
-    const cols = Math.floor(containerRect.width / gridSize);
-    const rows = Math.floor(containerRect.height / gridSize);
-    
-    // Create dots at random grid intersections
-    for (let i = 0; i < 15; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'hero-dot';
-        dot.style.left = (Math.floor(Math.random() * cols) * gridSize) + 'px';
-        dot.style.top = (Math.floor(Math.random() * rows) * gridSize) + 'px';
-        dot.style.animationDelay = (Math.random() * 4) + 's';
-        container.appendChild(dot);
-    }
-    
-    // Periodically move dots to new positions
-    setInterval(function() {
-        const dots = container.querySelectorAll('.hero-dot');
-        dots.forEach(function(dot) {
-            if (Math.random() > 0.7) {
-                dot.style.left = (Math.floor(Math.random() * cols) * gridSize) + 'px';
-                dot.style.top = (Math.floor(Math.random() * rows) * gridSize) + 'px';
-            }
-        });
-    }, 4000);
-})();
+    // Hero Slider Animation
+    (function () {
+        const slider = document.getElementById('heroSlider');
+        if (!slider) return;
+
+        const slides = slider.querySelectorAll('.hero-slide');
+        if (slides.length < 2) return;
+
+        let currentSlide = 0;
+        const interval = 3000; // 3 seconds
+
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        setInterval(nextSlide, interval);
+    })();
 </script>
 {% endblock %}

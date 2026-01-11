@@ -3857,3 +3857,11 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'submit
 2026-01-09 16:14:00,623 - src.face_recognition.face_encoder - INFO - Face encoder initialized with OpenCV
 2026-01-09 16:14:00,639 - src.face_recognition.face_detector - INFO - Face detector initialized with OpenCV
 2026-01-09 16:14:00,647 - app - INFO - Database tables created
+2026-01-11 23:56:14,726 - __main__ - INFO - CSRF protection initialized
+2026-01-11 23:56:14,733 - src.face_recognition.face_encoder - WARNING - OpenCV not available - face encoding disabled
+2026-01-11 23:56:14,733 - src.face_recognition.face_detector - WARNING - OpenCV not available - face detection disabled
+2026-01-11 23:56:14,739 - __main__ - INFO - Database tables created
+2026-01-11 23:59:51,172 - __main__ - INFO - CSRF protection initialized
+2026-01-11 23:59:51,174 - src.face_recognition.face_encoder - WARNING - OpenCV not available - face encoding disabled
+2026-01-11 23:59:51,174 - src.face_recognition.face_detector - WARNING - OpenCV not available - face detection disabled
+2026-01-11 23:59:51,176 - __main__ - INFO - Database tables created
