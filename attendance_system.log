@@ -3865,3 +3865,173 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'submit
 2026-01-11 23:59:51,174 - src.face_recognition.face_encoder - WARNING - OpenCV not available - face encoding disabled
 2026-01-11 23:59:51,174 - src.face_recognition.face_detector - WARNING - OpenCV not available - face detection disabled
 2026-01-11 23:59:51,176 - __main__ - INFO - Database tables created
+2026-01-12 00:00:59,641 - __main__ - INFO - CSRF protection initialized
+2026-01-12 00:00:59,643 - src.face_recognition.face_encoder - WARNING - OpenCV not available - face encoding disabled
+2026-01-12 00:00:59,643 - src.face_recognition.face_detector - WARNING - OpenCV not available - face detection disabled
+2026-01-12 00:00:59,646 - __main__ - INFO - Database tables created
+2026-01-12 00:00:59,689 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.24:5000
+2026-01-12 00:00:59,689 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-01-12 00:00:59,690 - werkzeug - INFO -  * Restarting with stat
+2026-01-12 00:01:00,456 - __main__ - INFO - CSRF protection initialized
+2026-01-12 00:01:00,458 - src.face_recognition.face_encoder - WARNING - OpenCV not available - face encoding disabled
+2026-01-12 00:01:00,458 - src.face_recognition.face_detector - WARNING - OpenCV not available - face detection disabled
+2026-01-12 00:01:00,461 - __main__ - INFO - Database tables created
+2026-01-12 00:01:00,488 - werkzeug - WARNING -  * Debugger is active!
+2026-01-12 00:01:00,491 - werkzeug - INFO -  * Debugger PIN: 801-900-944
+2026-01-12 00:01:30,270 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:01:30] "GET / HTTP/1.1" 200 -
+2026-01-12 00:01:30,355 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:01:30] "GET /static/css/modern-clean.css HTTP/1.1" 200 -
+2026-01-12 00:02:23,547 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:02:23] "GET / HTTP/1.1" 200 -
+2026-01-12 00:02:23,690 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:02:23] "GET / HTTP/1.1" 200 -
+2026-01-12 00:02:23,806 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:02:23] "GET /static/css/modern-clean.css HTTP/1.1" 200 -
+2026-01-12 00:02:23,868 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:02:23] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:05:48,929 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:05:48] "GET / HTTP/1.1" 200 -
+2026-01-12 00:05:48,946 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:05:48] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:07:15,781 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:15] "GET / HTTP/1.1" 200 -
+2026-01-12 00:07:15,804 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:15] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:07:16,034 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:16] "GET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:07:16,128 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:16] "GET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:07:16,129 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:16] "GET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:07:16,133 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:16] "GET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:07:16,134 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:07:16] "GET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:08:03,421 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "GET / HTTP/1.1" 200 -
+2026-01-12 00:08:03,440 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:08:03,641 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "GET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:08:03,787 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "GET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:08:03,789 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "GET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:08:03,798 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "GET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:08:03,824 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:03] "GET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1" 200 -
+2026-01-12 00:08:07,151 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "GET / HTTP/1.1" 200 -
+2026-01-12 00:08:07,170 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:08:07,403 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "[36mGET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:08:07,516 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "[36mGET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:08:07,522 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "[36mGET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:08:07,534 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "[36mGET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:08:07,547 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:08:07] "[36mGET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:09:08,104 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "GET / HTTP/1.1" 200 -
+2026-01-12 00:09:08,114 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:09:08,359 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "[36mGET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:09:08,444 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "[36mGET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:09:08,446 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "[36mGET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:09:08,450 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "[36mGET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:09:08,451 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:09:08] "[36mGET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:20,755 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:20] "GET / HTTP/1.1" 200 -
+2026-01-12 00:12:20,831 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:20] "GET / HTTP/1.1" 200 -
+2026-01-12 00:12:21,014 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,076 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,323 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,330 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,331 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,331 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,336 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,638 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,639 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,646 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,647 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:21,648 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:21] "[36mGET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:33,156 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:33] "GET /students HTTP/1.1" 200 -
+2026-01-12 00:12:33,335 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:33] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:12:34,577 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:34] "GET /attendance HTTP/1.1" 200 -
+2026-01-12 00:12:34,827 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:34] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:12:36,841 - __main__ - INFO - Leave management loaded: 1 requests, 1 students
+2026-01-12 00:12:36,859 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:36] "GET /leave HTTP/1.1" 200 -
+2026-01-12 00:12:37,051 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:37] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:12:40,148 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "GET / HTTP/1.1" 200 -
+2026-01-12 00:12:40,447 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:12:40,473 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "[36mGET /static/images/hero_slider/uploaded_image_1_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:40,473 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "[36mGET /static/images/hero_slider/uploaded_image_0_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:40,476 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "[36mGET /static/images/hero_slider/uploaded_image_2_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:40,481 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "[36mGET /static/images/hero_slider/uploaded_image_3_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:12:40,485 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:12:40] "[36mGET /static/images/hero_slider/uploaded_image_4_1768156468373.jpg HTTP/1.1[0m" 304 -
+2026-01-12 00:15:21,749 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:15:21] "GET / HTTP/1.1" 200 -
+2026-01-12 00:15:21,769 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:15:21] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:15:22,010 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:15:22] "GET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1" 200 -
+2026-01-12 00:15:22,120 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:15:22] "GET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1" 200 -
+2026-01-12 00:19:39,723 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:19:39] "GET / HTTP/1.1" 200 -
+2026-01-12 00:19:39,738 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:19:39] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:19:39,978 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:19:39] "GET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1" 200 -
+2026-01-12 00:19:40,077 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:19:40] "GET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1" 200 -
+2026-01-12 00:27:50,623 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:27:50] "GET / HTTP/1.1" 200 -
+2026-01-12 00:27:50,645 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:27:50] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:27:50,854 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:27:50] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:27:50,976 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:27:50] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:31:32,790 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:31:32] "GET / HTTP/1.1" 200 -
+2026-01-12 00:31:32,815 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:31:32] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:31:33,031 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:31:33] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:31:33,144 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:31:33] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:33:53,348 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:33:53] "GET /attendance HTTP/1.1" 200 -
+2026-01-12 00:33:53,447 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:33:53] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:33:56,607 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:33:56] "GET /students HTTP/1.1" 200 -
+2026-01-12 00:33:56,909 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:33:56] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:34:01,429 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:34:01] "GET /reports HTTP/1.1" 200 -
+2026-01-12 00:34:01,708 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:34:01] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:34:18,065 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:34:18] "GET /reports HTTP/1.1" 200 -
+2026-01-12 00:34:18,112 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:34:18] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:36:19,696 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:36:19] "GET / HTTP/1.1" 200 -
+2026-01-12 00:36:19,726 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:36:19] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:36:19,969 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:36:19] "GET /static/images/hero_slider/hero_analytics.png HTTP/1.1" 200 -
+2026-01-12 00:36:20,058 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:36:20] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:36:20,058 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:36:20] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:36:20,068 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:36:20] "GET /static/images/hero_slider/hero_uploaded_custom.png HTTP/1.1" 200 -
+2026-01-12 00:42:20,427 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:42:20] "GET / HTTP/1.1" 200 -
+2026-01-12 00:42:20,457 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:42:20] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:42:20,683 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:42:20] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:42:20,811 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:42:20] "GET /static/images/hero_slider/hero_uploaded_custom.png HTTP/1.1" 200 -
+2026-01-12 00:42:20,811 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:42:20] "GET /static/images/hero_slider/hero_analytics.png HTTP/1.1" 200 -
+2026-01-12 00:42:20,812 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:42:20] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:48:00,063 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:48:00] "GET / HTTP/1.1" 200 -
+2026-01-12 00:48:00,095 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:48:00] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:48:00,339 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:48:00] "GET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1" 200 -
+2026-01-12 00:48:00,425 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:48:00] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:48:00,425 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:48:00] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:48:00,441 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:48:00] "GET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1" 200 -
+2026-01-12 00:54:54,104 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:54] "GET / HTTP/1.1" 200 -
+2026-01-12 00:54:54,126 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:54] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:54:54,334 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:54] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:54:54,506 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:54] "GET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1" 200 -
+2026-01-12 00:54:54,515 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:54] "GET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1" 200 -
+2026-01-12 00:54:54,519 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:54] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:54:57,064 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:57] "GET / HTTP/1.1" 200 -
+2026-01-12 00:54:57,078 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:57] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:54:57,321 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:57] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:54:57,401 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:57] "[36mGET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1[0m" 304 -
+2026-01-12 00:54:57,403 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:57] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:54:57,405 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:54:57] "[36mGET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1[0m" 304 -
+2026-01-12 00:56:01,103 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:56:01] "GET / HTTP/1.1" 200 -
+2026-01-12 00:56:01,153 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:56:01] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:56:01,363 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:56:01] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:56:01,488 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:56:01] "[36mGET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1[0m" 304 -
+2026-01-12 00:56:01,489 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:56:01] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:56:01,489 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:56:01] "[36mGET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1[0m" 304 -
+2026-01-12 00:59:45,036 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:59:45] "GET / HTTP/1.1" 200 -
+2026-01-12 00:59:45,059 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:59:45] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 00:59:45,279 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:59:45] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 00:59:45,412 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:59:45] "[36mGET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1[0m" 304 -
+2026-01-12 00:59:45,412 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:59:45] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 00:59:45,413 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 00:59:45] "[36mGET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1[0m" 304 -
+2026-01-12 01:11:17,172 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:11:17] "GET / HTTP/1.1" 200 -
+2026-01-12 01:11:17,220 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:11:17] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 01:11:17,388 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:11:17] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 01:11:17,570 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:11:17] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 01:11:17,578 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:11:17] "GET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1" 200 -
+2026-01-12 01:11:17,585 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:11:17] "GET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1" 200 -
+2026-01-12 01:12:09,217 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:12:09] "GET / HTTP/1.1" 200 -
+2026-01-12 01:12:09,235 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:12:09] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 01:12:09,467 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:12:09] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 01:12:09,571 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:12:09] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 01:12:09,580 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:12:09] "GET /static/images/hero_slider/hero_secure_hd.png HTTP/1.1" 200 -
+2026-01-12 01:12:09,581 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:12:09] "GET /static/images/hero_slider/hero_analytics_hd.png HTTP/1.1" 200 -
+2026-01-12 01:14:01,151 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:14:01] "GET / HTTP/1.1" 200 -
+2026-01-12 01:14:01,188 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:14:01] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 01:14:01,402 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:14:01] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 01:14:01,535 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:14:01] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 01:16:51,513 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:16:51] "GET / HTTP/1.1" 200 -
+2026-01-12 01:16:51,554 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:16:51] "[36mGET /static/css/modern-clean.css HTTP/1.1[0m" 304 -
+2026-01-12 01:16:51,764 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:16:51] "[36mGET /static/images/hero_slider/hero_students_campus_1768157008715.png HTTP/1.1[0m" 304 -
+2026-01-12 01:16:51,908 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:16:51] "[36mGET /static/images/hero_slider/hero_tech_office_1768156977985.png HTTP/1.1[0m" 304 -
+2026-01-12 01:17:03,223 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:17:03] "[35m[1mGET /mark_attendance HTTP/1.1[0m" 500 -
+2026-01-12 01:17:03,441 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:17:03] "[36mGET /mark_attendance?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2026-01-12 01:17:03,701 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:17:03] "[36mGET /mark_attendance?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2026-01-12 01:17:04,067 - werkzeug - INFO - 127.0.0.1 - - [12/Jan/2026 01:17:04] "GET /mark_attendance?__debugger__=yes&cmd=resource&f=console.png&s=tXanlqh8Cx1ylqQomNKv HTTP/1.1" 200 -
