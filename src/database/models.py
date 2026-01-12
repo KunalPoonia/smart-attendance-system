@@ -156,3 +156,75 @@ class AttendanceSession(db.Model):
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'is_active': self.is_active
         }
+
+
+class NotificationPreference(db.Model):
+    """Notification preferences for parent/guardian contact"""
+    __tablename__ = 'notification_preferences'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False, unique=True)
+    parent_email = db.Column(db.String(255))  # Parent/guardian email
+    parent_phone = db.Column(db.String(20))   # Parent/guardian phone with country code
+    email_enabled = db.Column(db.Boolean, default=True)
+    sms_enabled = db.Column(db.Boolean, default=False)
+    absence_alerts = db.Column(db.Boolean, default=True)
+    low_attendance_alerts = db.Column(db.Boolean, default=True)
+    low_attendance_threshold = db.Column(db.Float, default=75.0)
+    leave_status_alerts = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    student = db.relationship('Student', backref=db.backref('notification_preference', uselist=False, lazy=True))
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'student_id': self.student_id,
+            'student_name': self.student.name if self.student else None,
+            'parent_email': self.parent_email,
+            'parent_phone': self.parent_phone,
+            'email_enabled': self.email_enabled,
+            'sms_enabled': self.sms_enabled,
+            'absence_alerts': self.absence_alerts,
+            'low_attendance_alerts': self.low_attendance_alerts,
+            'low_attendance_threshold': self.low_attendance_threshold,
+            'leave_status_alerts': self.leave_status_alerts,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class NotificationLog(db.Model):
+    """Log of all sent notifications"""
+    __tablename__ = 'notification_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    notification_type = db.Column(db.String(50), nullable=False)  # 'absence', 'low_attendance', 'leave_status'
+    channel = db.Column(db.String(20), nullable=False)  # 'email', 'sms'
+    recipient = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.String(200))
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False)  # 'sent', 'failed', 'skipped'
+    error_message = db.Column(db.Text)
+    sent_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    student = db.relationship('Student', backref=db.backref('notification_logs', lazy=True))
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'student_id': self.student_id,
+            'student_name': self.student.name if self.student else None,
+            'notification_type': self.notification_type,
+            'channel': self.channel,
+            'recipient': self.recipient,
+            'subject': self.subject,
+            'message': self.message,
+            'status': self.status,
+            'error_message': self.error_message,
+            'sent_at': self.sent_at.isoformat() if self.sent_at else None
+        }

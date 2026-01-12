@@ -63,6 +63,20 @@ class Config:
     RATELIMIT_STRATEGY = 'fixed-window'
     RATELIMIT_DEFAULT = '200 per day, 50 per hour'
     
+    # Notification Configuration
+    NOTIFICATION_EMAIL_ENABLED = os.environ.get('NOTIFICATION_EMAIL_ENABLED', 'true').lower() == 'true'
+    NOTIFICATION_SMS_ENABLED = os.environ.get('NOTIFICATION_SMS_ENABLED', 'false').lower() == 'true'
+    SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+    SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
+    SMTP_USERNAME = os.environ.get('SMTP_USERNAME', '')
+    SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+    SENDER_EMAIL = os.environ.get('SENDER_EMAIL', '')
+    SENDER_NAME = os.environ.get('SENDER_NAME', 'Smart Attendance System')
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '')
+    LOW_ATTENDANCE_THRESHOLD = float(os.environ.get('LOW_ATTENDANCE_THRESHOLD', 75.0))
+    
     @staticmethod
     def init_app(app):
         # Create necessary directories
