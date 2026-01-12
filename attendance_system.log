@@ -3857,3 +3857,9 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'submit
 2026-01-09 16:14:00,623 - src.face_recognition.face_encoder - INFO - Face encoder initialized with OpenCV
 2026-01-09 16:14:00,639 - src.face_recognition.face_detector - INFO - Face detector initialized with OpenCV
 2026-01-09 16:14:00,647 - app - INFO - Database tables created
+2026-01-12 21:45:46,447 - app - WARNING - Flask-WTF not available - CSRF protection disabled
+2026-01-12 21:45:46,448 - app - WARNING - Flask-Swagger-UI not available - API docs disabled
+2026-01-12 21:45:46,501 - src.face_recognition.face_encoder - INFO - Face encoder initialized with OpenCV
+2026-01-12 21:45:46,550 - src.face_recognition.face_detector - INFO - Face detector initialized with OpenCV
+2026-01-12 21:45:46,568 - app - INFO - Database tables created
+2026-01-12 21:45:46,569 - src.notifications.notification_manager - INFO - NotificationManager initialized. Email: False, SMS: False

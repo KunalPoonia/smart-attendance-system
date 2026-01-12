@@ -1,6 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
-from flask_swagger_ui import get_swaggerui_blueprint
+
+# Try to import flask_swagger_ui (optional)
+try:
+    from flask_swagger_ui import get_swaggerui_blueprint
+    SWAGGER_UI_AVAILABLE = True
+except ImportError:
+    SWAGGER_UI_AVAILABLE = False
+    get_swaggerui_blueprint = None
 import os
 import json
 import base64
@@ -18,6 +25,13 @@ except ImportError:
     LIMITER_AVAILABLE = False
     Limiter = None
     get_remote_address = None
+
+# rate_limit decorator - will be properly defined after app initialization, or as a passthrough
+def rate_limit(limit_string):
+    """Fallback rate_limit decorator when Flask-Limiter is not available."""
+    def decorator(f):
+        return f
+    return decorator
 
 # Try to import cv2 with error handling
 try:
@@ -38,8 +52,9 @@ except ImportError:
 
 # Import custom modules
 from config import Config
-from src.database.models import db, Student, AttendanceRecord, AttendanceSession, LeaveRequest
+from src.database.models import db, Student, AttendanceRecord, AttendanceSession, LeaveRequest, NotificationPreference, NotificationLog
 from src.core.simple_camera import SimpleCamera
+from src.notifications.notification_manager import notification_manager
 
 # Try to import face recognition modules (graceful fallback if not available)
 try:
@@ -111,19 +126,22 @@ def csrf_exempt(f):
     else:
         return f
 
-# Swagger UI Configuration
-SWAGGER_URL = '/api/docs'
-API_URL = '/static/swagger.yaml'
-swaggerui_blueprint = get_swaggerui_blueprint(
-    SWAGGER_URL,
-    API_URL,
-    config={
-        'app_name': "Smart Attendance System API",
-        'layout': "BaseLayout",
-        'deepLinking': True
-    }
-)
-app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+# Swagger UI Configuration (optional)
+if SWAGGER_UI_AVAILABLE and get_swaggerui_blueprint:
+    SWAGGER_URL = '/api/docs'
+    API_URL = '/static/swagger.yaml'
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL,
+        API_URL,
+        config={
+            'app_name': "Smart Attendance System API",
+            'layout': "BaseLayout",
+            'deepLinking': True
+        }
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+else:
+    logger.warning("Flask-Swagger-UI not available - API docs disabled")
 
 # Initialize components
 simple_camera = SimpleCamera(camera_index=0)
@@ -150,6 +168,9 @@ def create_tables():
 
 # Initialize database tables
 create_tables()
+
+# Initialize notification manager
+notification_manager.init_app(app, db)
 
 # Add datetime to template context
 @app.context_processor
@@ -1018,6 +1039,12 @@ def review_leave():
         
         db.session.commit()
         
+        # Send leave status notification
+        try:
+            notification_manager.notify_leave_status(leave_id, status, review_notes)
+        except Exception as notif_err:
+            logger.warning(f"Failed to send leave status notification: {notif_err}")
+        
         logger.info(f"Leave request {leave_id} {status.lower()} by {reviewed_by}")
         flash(f'Leave request {status.lower()} successfully!', 'success')
         
@@ -1715,6 +1742,228 @@ def analytics_recent_activity():
         return jsonify({'error': str(e)}), 500
 
 # ==================== END ANALYTICS DASHBOARD ROUTES ====================
+
+# ==================== NOTIFICATION ROUTES ====================
+
+@app.route('/notifications/settings')
+def notification_settings():
+    """Notification settings page"""
+    try:
+        # Get global stats
+        total_preferences = NotificationPreference.query.count()
+        email_enabled_count = NotificationPreference.query.filter_by(email_enabled=True).count()
+        sms_enabled_count = NotificationPreference.query.filter_by(sms_enabled=True).count()
+        
+        # Get recent notifications
+        recent_logs = NotificationLog.query.order_by(
+            NotificationLog.sent_at.desc()
+        ).limit(10).all()
+        
+        # Check service availability
+        email_available = notification_manager.email_service.is_available() if notification_manager.email_service else False
+        sms_available = notification_manager.sms_service.is_available() if notification_manager.sms_service else False
+        
+        return render_template('notification_settings.html',
+                             total_preferences=total_preferences,
+                             email_enabled_count=email_enabled_count,
+                             sms_enabled_count=sms_enabled_count,
+                             recent_logs=recent_logs,
+                             email_available=email_available,
+                             sms_available=sms_available,
+                             email_enabled=app.config.get('NOTIFICATION_EMAIL_ENABLED', False),
+                             sms_enabled=app.config.get('NOTIFICATION_SMS_ENABLED', False),
+                             low_attendance_threshold=app.config.get('LOW_ATTENDANCE_THRESHOLD', 75.0))
+    except Exception as e:
+        logger.error(f"Error loading notification settings: {str(e)}")
+        flash('Error loading notification settings', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/notifications/history')
+def notification_history():
+    """Notification history page with pagination"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        notification_type = request.args.get('type', '')
+        status_filter = request.args.get('status', '')
+        student_id = request.args.get('student_id', type=int)
+        
+        # Build query
+        query = NotificationLog.query
+        
+        if notification_type:
+            query = query.filter_by(notification_type=notification_type)
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        if student_id:
+            query = query.filter_by(student_id=student_id)
+        
+        # Paginate
+        logs_pagination = query.order_by(
+            NotificationLog.sent_at.desc()
+        ).paginate(page=page, per_page=per_page, error_out=False)
+        
+        # Get filter options
+        students = Student.query.filter_by(is_active=True).order_by(Student.name).all()
+        
+        return render_template('notification_history.html',
+                             logs=logs_pagination.items,
+                             pagination=logs_pagination,
+                             students=students,
+                             current_type=notification_type,
+                             current_status=status_filter,
+                             current_student_id=student_id)
+    except Exception as e:
+        logger.error(f"Error loading notification history: {str(e)}")
+        flash('Error loading notification history', 'error')
+        return redirect(url_for('notification_settings'))
+
+
+@app.route('/api/notifications/preferences/<int:student_id>', methods=['GET'])
+def get_notification_preferences(student_id):
+    """Get notification preferences for a student"""
+    try:
+        pref = NotificationPreference.query.filter_by(student_id=student_id).first()
+        if pref:
+            return jsonify(pref.to_dict())
+        else:
+            return jsonify({
+                'student_id': student_id,
+                'parent_email': '',
+                'parent_phone': '',
+                'email_enabled': True,
+                'sms_enabled': False,
+                'absence_alerts': True,
+                'low_attendance_alerts': True,
+                'low_attendance_threshold': 75.0,
+                'leave_status_alerts': True
+            })
+    except Exception as e:
+        logger.error(f"Error getting notification preferences: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/notifications/preferences/<int:student_id>', methods=['POST'])
+@csrf_exempt
+def update_notification_preferences(student_id):
+    """Update notification preferences for a student"""
+    try:
+        data = request.get_json() or request.form
+        
+        # Get or create preferences
+        pref = NotificationPreference.query.filter_by(student_id=student_id).first()
+        if not pref:
+            pref = NotificationPreference(student_id=student_id)
+            db.session.add(pref)
+        
+        # Update fields
+        if 'parent_email' in data:
+            pref.parent_email = data.get('parent_email', '').strip()
+        if 'parent_phone' in data:
+            pref.parent_phone = data.get('parent_phone', '').strip()
+        if 'email_enabled' in data:
+            pref.email_enabled = str(data.get('email_enabled', 'true')).lower() == 'true'
+        if 'sms_enabled' in data:
+            pref.sms_enabled = str(data.get('sms_enabled', 'false')).lower() == 'true'
+        if 'absence_alerts' in data:
+            pref.absence_alerts = str(data.get('absence_alerts', 'true')).lower() == 'true'
+        if 'low_attendance_alerts' in data:
+            pref.low_attendance_alerts = str(data.get('low_attendance_alerts', 'true')).lower() == 'true'
+        if 'low_attendance_threshold' in data:
+            try:
+                pref.low_attendance_threshold = float(data.get('low_attendance_threshold', 75.0))
+            except (ValueError, TypeError):
+                pref.low_attendance_threshold = 75.0
+        if 'leave_status_alerts' in data:
+            pref.leave_status_alerts = str(data.get('leave_status_alerts', 'true')).lower() == 'true'
+        
+        db.session.commit()
+        
+        logger.info(f"Notification preferences updated for student {student_id}")
+        return jsonify({'success': True, 'message': 'Preferences updated', 'data': pref.to_dict()})
+        
+    except Exception as e:
+        logger.error(f"Error updating notification preferences: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/notifications/test', methods=['POST'])
+@csrf_exempt
+def test_notification():
+    """Send a test notification"""
+    try:
+        data = request.get_json() or request.form
+        channel = data.get('channel', 'email')
+        recipient = data.get('recipient', '')
+        
+        if not recipient:
+            return jsonify({'success': False, 'error': 'Recipient required'}), 400
+        
+        if channel == 'email':
+            if not notification_manager.email_service.is_available():
+                return jsonify({'success': False, 'error': 'Email service not configured'}), 400
+            
+            success, msg = notification_manager.email_service.send_email(
+                recipient,
+                'Test Notification - Smart Attendance System',
+                'This is a test notification from the Smart Attendance System. If you received this, email notifications are working correctly!',
+                '<h2>Test Notification</h2><p>This is a test notification from the <strong>Smart Attendance System</strong>.</p><p>If you received this, email notifications are working correctly!</p>'
+            )
+            return jsonify({'success': success, 'message': msg})
+            
+        elif channel == 'sms':
+            if not notification_manager.sms_service.is_available():
+                return jsonify({'success': False, 'error': 'SMS service not configured'}), 400
+            
+            success, msg = notification_manager.sms_service.send_sms(
+                recipient,
+                'Test from Smart Attendance System. SMS notifications are working!'
+            )
+            return jsonify({'success': success, 'message': msg})
+        
+        return jsonify({'success': False, 'error': 'Invalid channel'}), 400
+        
+    except Exception as e:
+        logger.error(f"Error sending test notification: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/notifications/student/<int:student_id>/attendance')
+def get_student_attendance_stats(student_id):
+    """Get student attendance statistics including percentage"""
+    try:
+        student = Student.query.get_or_404(student_id)
+        percentage = notification_manager.calculate_attendance_percentage(student_id)
+        
+        # Get preference threshold
+        pref = NotificationPreference.query.filter_by(student_id=student_id).first()
+        threshold = pref.low_attendance_threshold if pref else 75.0
+        
+        return jsonify({
+            'student_id': student_id,
+            'student_name': student.name,
+            'attendance_percentage': percentage,
+            'threshold': threshold,
+            'below_threshold': percentage < threshold
+        })
+    except Exception as e:
+        logger.error(f"Error getting student attendance stats: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/notifications/check_low_attendance/<int:student_id>', methods=['POST'])
+@csrf_exempt
+def check_and_notify_low_attendance(student_id):
+    """Check and send low attendance notification for a student"""
+    try:
+        result = notification_manager.check_and_notify_low_attendance(student_id)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error checking low attendance: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== END NOTIFICATION ROUTES ====================
 
 if __name__ == '__main__':
     try:

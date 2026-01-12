@@ -1,0 +1,337 @@
+{% extends "base_clean.html" %}
+
+{% block title %}Notification Settings - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">Notification Settings</h1>
+            <p class="page-subtitle">Configure attendance notifications for parents/guardians</p>
+        </div>
+        <a href="{{ url_for('notification_history') }}" class="btn btn-secondary">
+            <i class="fas fa-history"></i>
+            View History
+        </a>
+    </div>
+    
+    <!-- Service Status -->
+    <div class="stats-grid slide-up">
+        <div class="stat-card">
+            <div class="stat-label">Email Service</div>
+            <div class="stat-value">
+                {% if email_available %}
+                <span style="color: var(--success);"><i class="fas fa-check-circle"></i> Active</span>
+                {% else %}
+                <span style="color: var(--warning);"><i class="fas fa-exclamation-circle"></i> Not Configured</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">SMS Service</div>
+            <div class="stat-value">
+                {% if sms_available %}
+                <span style="color: var(--success);"><i class="fas fa-check-circle"></i> Active</span>
+                {% else %}
+                <span style="color: var(--muted);"><i class="fas fa-minus-circle"></i> Disabled</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Configured Students</div>
+            <div class="stat-value">{{ total_preferences if total_preferences is defined else 0 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Low Attendance Threshold</div>
+            <div class="stat-value">{{ low_attendance_threshold }}%</div>
+        </div>
+    </div>
+    
+    <!-- Configuration Info -->
+    <div class="card slide-up">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-cog"></i> Configuration</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid-2">
+                <div>
+                    <h4 style="margin-bottom: 1rem;">Email Settings</h4>
+                    <table class="config-table">
+                        <tr>
+                            <td><strong>Email Enabled:</strong></td>
+                            <td>
+                                {% if email_enabled %}
+                                <span class="badge badge-success">Yes</span>
+                                {% else %}
+                                <span class="badge badge-warning">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service Status:</strong></td>
+                            <td>
+                                {% if email_available %}
+                                <span class="badge badge-success">Connected</span>
+                                {% else %}
+                                <span class="badge badge-danger">Not Configured</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Students with Email:</strong></td>
+                            <td>{{ email_enabled_count if email_enabled_count is defined else 0 }}</td>
+                        </tr>
+                    </table>
+                    {% if not email_available %}
+                    <div class="alert alert-warning" style="margin-top: 1rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Configure SMTP credentials in <code>.env</code> file to enable email notifications.
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem;">SMS Settings</h4>
+                    <table class="config-table">
+                        <tr>
+                            <td><strong>SMS Enabled:</strong></td>
+                            <td>
+                                {% if sms_enabled %}
+                                <span class="badge badge-success">Yes</span>
+                                {% else %}
+                                <span class="badge badge-warning">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Service Status:</strong></td>
+                            <td>
+                                {% if sms_available %}
+                                <span class="badge badge-success">Connected</span>
+                                {% else %}
+                                <span class="badge badge-muted">Not Configured</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Students with SMS:</strong></td>
+                            <td>{{ sms_enabled_count if sms_enabled_count is defined else 0 }}</td>
+                        </tr>
+                    </table>
+                    {% if not sms_available %}
+                    <div class="alert alert-info" style="margin-top: 1rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Configure Twilio credentials in <code>.env</code> file to enable SMS notifications.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Types -->
+    <div class="card slide-up">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-bell"></i> Notification Types</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid-3">
+                <div class="notification-type-card">
+                    <div class="notification-icon" style="color: var(--danger);">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
+                    <h4>Absence Alerts</h4>
+                    <p>Notify parents when a student is marked absent</p>
+                </div>
+                <div class="notification-type-card">
+                    <div class="notification-icon" style="color: var(--warning);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4>Low Attendance Warnings</h4>
+                    <p>Alert when attendance falls below {{ low_attendance_threshold }}%</p>
+                </div>
+                <div class="notification-type-card">
+                    <div class="notification-icon" style="color: var(--primary);">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h4>Leave Status Updates</h4>
+                    <p>Notify when leave requests are approved/rejected</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Notifications -->
+    <div class="card slide-up">
+        <div class="card-header flex justify-between items-center">
+            <h3 class="card-title"><i class="fas fa-history"></i> Recent Notifications</h3>
+            <a href="{{ url_for('notification_history') }}" class="btn btn-ghost btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if recent_logs %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Student</th>
+                            <th>Type</th>
+                            <th>Channel</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_logs %}
+                        <tr>
+                            <td>{{ log.sent_at.strftime('%Y-%m-%d %H:%M') if log.sent_at else 'N/A' }}</td>
+                            <td><strong>{{ log.student.name if log.student else 'Unknown' }}</strong></td>
+                            <td>
+                                <span class="badge badge-{{ 'danger' if log.notification_type == 'absence' else ('warning' if log.notification_type == 'low_attendance' else 'primary') }}">
+                                    {{ log.notification_type | replace('_', ' ') | title }}
+                                </span>
+                            </td>
+                            <td>
+                                <i class="fas fa-{{ 'envelope' if log.channel == 'email' else 'sms' }}"></i>
+                                {{ log.channel | title }}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ 'success' if log.status == 'sent' else ('danger' if log.status == 'failed' else 'warning') }}">
+                                    {{ log.status | title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <div class="empty-state-title">No notifications yet</div>
+                <div class="empty-state-text">Notifications will appear here when sent.</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- How to Configure -->
+    <div class="card slide-up">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-question-circle"></i> Setup Guide</h3>
+        </div>
+        <div class="card-body">
+            <div class="setup-steps">
+                <div class="setup-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Configure Environment Variables</h4>
+                        <p>Edit your <code>.env</code> file with SMTP/Twilio credentials</p>
+                    </div>
+                </div>
+                <div class="setup-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Add Parent Contact Info</h4>
+                        <p>Edit each student to add parent email/phone in their profile</p>
+                    </div>
+                </div>
+                <div class="setup-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Enable Notification Preferences</h4>
+                        <p>Configure which notifications each student should receive</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.config-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.config-table td {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.config-table td:first-child {
+    color: var(--text-muted);
+}
+.notification-type-card {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+.notification-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+.notification-type-card h4 {
+    margin-bottom: 0.5rem;
+}
+.notification-type-card p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+}
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+.setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.setup-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+.step-number {
+    width: 2rem;
+    height: 2rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.step-content h4 {
+    margin: 0 0 0.25rem 0;
+}
+.step-content p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+}
+.alert-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: var(--warning);
+}
+.alert-info {
+    background: rgba(23, 162, 184, 0.1);
+    border: 1px solid rgba(23, 162, 184, 0.3);
+    color: var(--info);
+}
+@media (max-width: 768px) {
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

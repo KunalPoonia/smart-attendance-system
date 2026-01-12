@@ -1,0 +1,338 @@
+{% extends "base_clean.html" %}
+
+{% block title %}Notification History - Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">Notification History</h1>
+            <p class="page-subtitle">View all sent notifications</p>
+        </div>
+        <a href="{{ url_for('notification_settings') }}" class="btn btn-secondary">
+            <i class="fas fa-cog"></i>
+            Settings
+        </a>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card slide-up">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('notification_history') }}" class="filter-form">
+                <div class="grid-4">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select name="type" class="form-input">
+                            <option value="">All Types</option>
+                            <option value="absence" {{ 'selected' if current_type == 'absence' else '' }}>Absence</option>
+                            <option value="low_attendance" {{ 'selected' if current_type == 'low_attendance' else '' }}>Low Attendance</option>
+                            <option value="leave_status" {{ 'selected' if current_type == 'leave_status' else '' }}>Leave Status</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-input">
+                            <option value="">All Statuses</option>
+                            <option value="sent" {{ 'selected' if current_status == 'sent' else '' }}>Sent</option>
+                            <option value="failed" {{ 'selected' if current_status == 'failed' else '' }}>Failed</option>
+                            <option value="skipped" {{ 'selected' if current_status == 'skipped' else '' }}>Skipped</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Student</label>
+                        <select name="student_id" class="form-input">
+                            <option value="">All Students</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}" {{ 'selected' if current_student_id == student.id else '' }}>
+                                {{ student.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i>
+                            Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Notification Logs -->
+    <div class="card slide-up">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-list"></i> 
+                Notifications
+                {% if pagination %}
+                <span class="badge badge-muted">{{ pagination.total }}</span>
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if logs %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Student</th>
+                            <th>Type</th>
+                            <th>Channel</th>
+                            <th>Recipient</th>
+                            <th>Status</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>
+                                <div class="datetime">
+                                    <span class="date">{{ log.sent_at.strftime('%Y-%m-%d') if log.sent_at else 'N/A' }}</span>
+                                    <span class="time">{{ log.sent_at.strftime('%H:%M:%S') if log.sent_at else '' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ log.student.name if log.student else 'Unknown' }}</strong>
+                                <br>
+                                <small class="text-muted">{{ log.student.student_id if log.student else '' }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ 'danger' if log.notification_type == 'absence' else ('warning' if log.notification_type == 'low_attendance' else 'primary') }}">
+                                    {% if log.notification_type == 'absence' %}
+                                    <i class="fas fa-user-slash"></i>
+                                    {% elif log.notification_type == 'low_attendance' %}
+                                    <i class="fas fa-chart-line"></i>
+                                    {% else %}
+                                    <i class="fas fa-calendar-check"></i>
+                                    {% endif %}
+                                    {{ log.notification_type | replace('_', ' ') | title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if log.channel == 'email' %}
+                                <i class="fas fa-envelope" style="color: var(--primary);"></i> Email
+                                {% else %}
+                                <i class="fas fa-sms" style="color: var(--success);"></i> SMS
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="recipient">{{ log.recipient[:30] }}{{ '...' if log.recipient|length > 30 else '' }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ 'success' if log.status == 'sent' else ('danger' if log.status == 'failed' else 'warning') }}">
+                                    {% if log.status == 'sent' %}
+                                    <i class="fas fa-check"></i>
+                                    {% elif log.status == 'failed' %}
+                                    <i class="fas fa-times"></i>
+                                    {% else %}
+                                    <i class="fas fa-forward"></i>
+                                    {% endif %}
+                                    {{ log.status | title }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-ghost btn-sm" onclick="showDetails({{ log.id }}, '{{ log.subject | default('No subject', true) | e }}', `{{ log.message | default('No message', true) | e }}`, '{{ log.error_message | default('', true) | e }}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if pagination and pagination.pages > 1 %}
+            <div class="pagination-container">
+                <div class="pagination">
+                    {% if pagination.has_prev %}
+                    <a href="{{ url_for('notification_history', page=pagination.prev_num, type=current_type, status=current_status, student_id=current_student_id) }}" class="pagination-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% for page in pagination.iter_pages() %}
+                        {% if page %}
+                            {% if page == pagination.page %}
+                            <span class="pagination-btn active">{{ page }}</span>
+                            {% else %}
+                            <a href="{{ url_for('notification_history', page=page, type=current_type, status=current_status, student_id=current_student_id) }}" class="pagination-btn">{{ page }}</a>
+                            {% endif %}
+                        {% else %}
+                        <span class="pagination-ellipsis">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if pagination.has_next %}
+                    <a href="{{ url_for('notification_history', page=pagination.next_num, type=current_type, status=current_status, student_id=current_student_id) }}" class="pagination-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <div class="empty-state-title">No notifications found</div>
+                <div class="empty-state-text">
+                    {% if current_type or current_status or current_student_id %}
+                    Try adjusting your filters to see more results.
+                    {% else %}
+                    Notifications will appear here when sent.
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" id="details-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Notification Details</h3>
+            <button class="modal-close" onclick="closeDetailsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Subject</label>
+                <div id="detail-subject" class="detail-content"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Message</label>
+                <div id="detail-message" class="detail-content message-content"></div>
+            </div>
+            <div class="form-group" id="error-group" style="display: none;">
+                <label class="form-label" style="color: var(--danger);">Error</label>
+                <div id="detail-error" class="detail-content error-content"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDetailsModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+.datetime {
+    display: flex;
+    flex-direction: column;
+}
+.datetime .date {
+    font-weight: 500;
+}
+.datetime .time {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+.recipient {
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+}
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+}
+.pagination-btn {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.pagination-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.pagination-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.pagination-ellipsis {
+    padding: 0.5rem 0.25rem;
+    color: var(--text-muted);
+}
+.detail-content {
+    padding: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.message-content {
+    white-space: pre-wrap;
+    font-size: 0.875rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.error-content {
+    color: var(--danger);
+    background: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+}
+@media (max-width: 768px) {
+    .grid-4 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 480px) {
+    .grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showDetails(id, subject, message, error) {
+        document.getElementById('detail-subject').textContent = subject;
+        document.getElementById('detail-message').textContent = message;
+        
+        const errorGroup = document.getElementById('error-group');
+        const errorContent = document.getElementById('detail-error');
+        
+        if (error) {
+            errorContent.textContent = error;
+            errorGroup.style.display = 'block';
+        } else {
+            errorGroup.style.display = 'none';
+        }
+        
+        document.getElementById('details-modal').classList.add('active');
+    }
+    
+    function closeDetailsModal() {
+        document.getElementById('details-modal').classList.remove('active');
+    }
+    
+    document.getElementById('details-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeDetailsModal();
+    });
+</script>
+{% endblock %}
