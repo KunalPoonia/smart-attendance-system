@@ -130,6 +130,9 @@ pip install -r requirements.txt
 
 ### Run Application
 
+> [!TIP]
+> **Windows Users**: For a smooth experience, please follow our [Windows Setup Guide](docs/WINDOWS_SETUP.md) which covers `dlib` installation and environment configuration in detail.
+
 ```bash
 python app.py
 ```
@@ -140,15 +143,16 @@ Visit: `http://localhost:5000`
 
 ## 🧩 Dlib Installation (Critical)
 
-Face recognition depends on **dlib**. Follow this verified guide:
+Face recognition depends on **dlib**. For common operating systems, follow these guides:
 
-🔗 [https://github.com/z-mahmud22/Dlib_Windows_Python3.x](https://github.com/z-mahmud22/Dlib_Windows_Python3.x)
+* 🪟 **Windows**: [Windows Setup Guide](docs/WINDOWS_SETUP.md) (Highly Recommended)
+* 🔗 **General Guide**: [z-mahmud22/Dlib_Windows_Python3.x](https://github.com/z-mahmud22/Dlib_Windows_Python3.x)
 
-### Common Fix (Windows)
+### Common Prerequisites (Windows)
 
-* Install **Visual Studio C++ Build Tools**
-* Install CMake
-* Restart terminal (yes, really)
+* **Visual Studio C++ Build Tools** (Select "Desktop development with C++")
+* **CMake** (`pip install cmake`)
+* Restart terminal after installation.
 
 ---
 
@@ -159,16 +163,11 @@ The most common installation failure is related to **`dlib`** and **`CMake`**. I
 
 ### 🪟 Windows
 
-1. **Install Visual Studio Build Tools**
-   Download from: [https://visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-   During installation, select **“Desktop development with C++”**.
-2. **Install CMake**
+If you encounter `Failed building wheel for dlib` or environment errors:
 
-   ```bash
-   pip install cmake
-   ```
-3. **Verify Environment Variables**
-   Ensure **Python** and **Python/Scripts** are added to your *System Environment Variables*.
+1. Follow the [Detailed Windows Setup Guide](docs/WINDOWS_SETUP.md).
+2. Install **Visual Studio Build Tools** (Workload: **"Desktop development with C++"**).
+3. Ensure `SECRET_KEY` is configured in your `.env` file.
 
 ---
 
